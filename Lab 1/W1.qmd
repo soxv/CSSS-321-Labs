@@ -1,0 +1,53 @@
+---
+title: "CSSS/SOC/STAT 321: Lab 1"
+subtitle: "Introduction to R/RStudio"
+author: "Tao Lin"
+format: 
+  revealjs:
+    scrollable: true
+    self-contained: true
+    footer: "CSSS/SOC/STAT 321 Data Science and Statistics for Social Scicence I"
+    logo: "https://csss.uw.edu/assets/csss-logo.png"
+filters:
+  - reveal-auto-agenda
+auto-agenda:
+  bullets: bullets
+  heading: Agenda
+---
+
+# Section Logistics
+
+## Important Deadlines
+
+- Problem Sets
+  - Problem Set 1 (Randomized Experiments): April 16
+  - Problem Set 2 (Summarizing Data): April 30
+  - Problem Set 3 (Regression): May 21
+  - Problem Set 4 (Inference): June 4
+- Midterm: May 12
+- Final Project
+  - Proposals: April 21
+  - (Initial) Analyses: May 19
+  - Final Reports: June 7
+
+## Introduce Yourself!
+
+- What is your major / year?
+- Why do you take this course?
+- What is your experience with data science and R?
+
+# Introduction to R/RStudio
+
+## What is `R`?
+
+
+
+
+## What is `RStudio`?
+
+## What is `Rmarkdown`?
+
+
+
+
+
