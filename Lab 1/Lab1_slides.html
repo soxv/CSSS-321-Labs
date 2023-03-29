@@ -1282,7 +1282,10 @@ Tao Lin
 <li>Review Course Materials, esp. readings and assignments.</li>
 <li>Develop Coding Skills and Practices in <code>R</code>.</li>
 </ul></li>
-<li>Lab Materials are published at <a href="https://github.com/soxv/CSSS-321-Labs">https://github.com/soxv/CSSS-321-Labs</a>.</li>
+<li>Lab Materials are published at <a href="https://github.com/soxv/CSSS-321-Labs">https://github.com/soxv/CSSS-321-Labs</a>.
+<ul>
+<li>I also post slides on Canvas, but will sometimes update previous slides in the GitHub repo.</li>
+</ul></li>
 </ul>
 </section>
 <section id="important-deadlines" class="slide level2">
@@ -1377,8 +1380,16 @@ Tao Lin
 <li>A free and open-source language for statistical computing and graphics.</li>
 <li>How to install <code>R</code> from <a href="https://cloud.r-project.org/">CRAN (The Comprehensive R Archive Network)</a>.
 <ul>
-<li>Mac: choose “R-4.2.3-arm64.pkg” for Apple silicon Macs (M1 or higher); otherwise choose “R-4.2.3.pkg”.</li>
-<li>Windows: quite straightforward …</li>
+<li>Mac:
+<ul>
+<li>choose “R-4.2.3-arm64.pkg” for Apple silicon Macs (M1 or higher)</li>
+<li>otherwise choose “R-4.2.3.pkg”.</li>
+</ul></li>
+<li>Windows:
+<ul>
+<li>click “install R for the first time”</li>
+<li>also click “RTools”</li>
+</ul></li>
 </ul></li>
 <li>Two components:
 <ul>
@@ -1453,25 +1464,33 @@ Tao Lin
 <span id="cb1-2"><a href="#cb1-2"></a><span class="do">## Written by Matthew Blackwell </span></span>
 <span id="cb1-3"><a href="#cb1-3"></a><span class="do">## See here: https://github.com/mattblackwell/qsslearnr</span></span>
 <span id="cb1-4"><a href="#cb1-4"></a></span>
-<span id="cb1-5"><a href="#cb1-5"></a><span class="co"># install.packages(remotes)</span></span>
+<span id="cb1-5"><a href="#cb1-5"></a><span class="co"># 1. Install `remotes` package: install.packages(remotes)</span></span>
 <span id="cb1-6"><a href="#cb1-6"></a></span>
-<span id="cb1-7"><a href="#cb1-7"></a><span class="do">## Install the following packages by running:</span></span>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="do">## 2. Install the following packages by running:</span></span>
 <span id="cb1-8"><a href="#cb1-8"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;kosukeimai/qss-package&quot;</span>, <span class="at">build_vignettes =</span> <span class="cn">TRUE</span>)</span>
 <span id="cb1-9"><a href="#cb1-9"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;rstudio/learnr&quot;</span>)</span>
 <span id="cb1-10"><a href="#cb1-10"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;rstudio-education/gradethis&quot;</span>)</span>
 <span id="cb1-11"><a href="#cb1-11"></a>remotes<span class="sc">::</span><span class="fu">install_github</span>(<span class="st">&quot;mattblackwell/qsslearnr&quot;</span>)</span>
 <span id="cb1-12"><a href="#cb1-12"></a></span>
-<span id="cb1-13"><a href="#cb1-13"></a><span class="do">## See all available tutorials for QSS</span></span>
+<span id="cb1-13"><a href="#cb1-13"></a><span class="do">## 3. See all available tutorials for QSS</span></span>
 <span id="cb1-14"><a href="#cb1-14"></a>learnr<span class="sc">::</span><span class="fu">run_tutorial</span>(<span class="at">package =</span> <span class="st">&quot;qsslearnr&quot;</span>)</span>
 <span id="cb1-15"><a href="#cb1-15"></a></span>
-<span id="cb1-16"><a href="#cb1-16"></a><span class="do">## Run a particular tutorial</span></span>
+<span id="cb1-16"><a href="#cb1-16"></a><span class="do">## 4. Run a particular tutorial</span></span>
 <span id="cb1-17"><a href="#cb1-17"></a>learnr<span class="sc">::</span><span class="fu">run_tutorial</span>(<span class="st">&quot;00-intro&quot;</span>, <span class="at">package =</span> <span class="st">&quot;qsslearnr&quot;</span>)</span>
 <span id="cb1-18"><a href="#cb1-18"></a></span>
-<span id="cb1-19"><a href="#cb1-19"></a><span class="do">## If you have problems generating PDF from Rmarkdown</span></span>
+<span id="cb1-19"><a href="#cb1-19"></a><span class="do">## 5. If you have problems generating PDF from Rmarkdown</span></span>
 <span id="cb1-20"><a href="#cb1-20"></a><span class="do">## install tinytex by running (takes some time!): </span></span>
 <span id="cb1-21"><a href="#cb1-21"></a><span class="co"># install.packages(&#39;tinytex&#39;)</span></span>
 <span id="cb1-22"><a href="#cb1-22"></a><span class="co"># tinytex::install_tinytex()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<ul>
+<li>For Mac users, sometimes the installation of <code>qss</code> package may fail because <code>pandoc</code> or <code>curl</code> is not installed or upgraded in your Mac (if you don’t encounter these problems, no need to look at this!).
+<ul>
+<li><a href="https://pandoc.org/"><code>pandoc</code></a> is used to convert documents to other types, e.g. convert <code>.html</code> to <code>.pdf</code> or <code>.docx</code>.</li>
+<li><a href="https://curl.se/"><code>curl</code></a> is used to transfer data through URLs.</li>
+<li>To install or upgrade <code>pandoc</code> or <code>curl</code>, we can first install the package manager <a href="https://brew.sh/">Homebrew</a>, and then install them by using <code>brew install pandoc</code> or <code>brew install curl</code> in Mac Terminal.</li>
+</ul></li>
+</ul>
 </section>
 <section class="slide level2">
 

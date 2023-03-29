@@ -164,7 +164,7 @@ learnr::run_tutorial("00-intro", package = "qsslearnr")
 
 ```
 
-- For Mac users, sometimes the installation of `qss` package may fail because `pandoc` or `curl` is not installed or upgraded (if you don't encounter these problems, no need to look at this!).
+- For Mac users, sometimes the installation of `qss` package may fail because `pandoc` or `curl` is not installed or upgraded in your Mac (if you don't encounter these problems, no need to look at this!).
   - [`pandoc`](https://pandoc.org/) is used to convert documents to other types, e.g. convert `.html` to `.pdf` or `.docx`.
   - [`curl`](https://curl.se/) is used to transfer data through URLs.
   - To install or upgrade `pandoc` or `curl`, we can first install the package manager [Homebrew](https://brew.sh/), and then install them by using `brew install pandoc` or `brew install curl` in Mac Terminal.
