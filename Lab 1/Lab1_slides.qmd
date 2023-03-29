@@ -32,6 +32,7 @@ auto-agenda:
 
 ## Important Deadlines
 
+- QSS Tutorials: due every Tuesday
 - Problem Sets
   - Problem Set 1 (Randomized Experiments): April 16
   - Problem Set 2 (Summarizing Data): April 30
@@ -42,6 +43,35 @@ auto-agenda:
   - Proposals: April 21
   - (Initial) Analyses: May 19
   - Final Reports: June 7
+
+## How to Look for Help?
+
+- Use `help()` or `?` to check out function documentation.
+- Just google the error message and find them on Stack Overflow or GitHub!
+- New options in the AI era: [ChatGPT](https://chat.openai.com/chat) or [New Bing](https://www.bing.com/new)!
+- We use Canvas discussion board for Q&A and troubleshooting
+  - People encountering similar problems can see how to solve them (avoid "reinventing the wheel").
+  - We encourage you to help your peers on the discussion board.
+  - If you have questions that cannot be covered by one single post, please come to my office hours.
+
+::: {layout-ncol=2}
+
+![](./img/debugtime.png){width=350}
+
+![](./img/stackoverflow.jpeg){width=350}
+
+:::
+
+---
+
+### Minimal Reproducible Example (MRE)
+
+- "minimal": "look in a smaller stack to find a needle"
+  - inputs are small and simple
+  - fewer packages loaded
+  - fewer function calls
+- "reproducible": provide code that someone else could run
+- Use [`reprex`](https://reprex.tidyverse.org/) and [`datapasta`](https://milesmcbain.github.io/datapasta/) to generate MRE! (see [https://www.rstudio.com/resources/webinars/help-me-help-you-creating-reproducible-examples/](https://www.rstudio.com/resources/webinars/help-me-help-you-creating-reproducible-examples/))
 
 ## Introduce Yourself!
 
@@ -131,31 +161,14 @@ learnr::run_tutorial("00-intro", package = "qsslearnr")
 
 ---
 
-# How to Look for Help?
+# Voter Turnout Data
 
----
+```{r}
 
-![](./attachments/debugtime.png)
+turnout <- read.csv("./data/turnout.csv")
+turnout
 
----
+```
 
-- Just google the error message or find them on Stack Overflow or GitHub!
-- New options in the AI era: [ChatGPT](https://chat.openai.com/chat) or (New Bing)[https://www.bing.com/new]!
-- We use Canvas discussion board for Q&A and troubleshooting
-  - People encountering similar problems can see how to solve them (avoid "reinventing the wheel").
-  - If you have more questions that cannot be covered by one single post, I encourage you to come to my office hours.
 
----
 
-![](./attachments/stackoverflow.jpeg)
-
----
-
-## Minimal Reproducible Example (MRE)
-
-- "minimal": "look in a smaller stack to find a needle"
-  - inputs are small and simple
-  - fewer packages loaded
-  - fewer function calls
-- "reproducible": provide code that someone else could run
-- Use [`reprex`](https://reprex.tidyverse.org/) and [`datapasta`](https://milesmcbain.github.io/datapasta/) to generate MRE! (see [https://www.rstudio.com/resources/webinars/help-me-help-you-creating-reproducible-examples/](https://www.rstudio.com/resources/webinars/help-me-help-you-creating-reproducible-examples/))
