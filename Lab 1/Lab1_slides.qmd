@@ -29,6 +29,7 @@ auto-agenda:
   - Review Course Materials, esp. readings and assignments.
   - Develop Coding Skills and Practices in `R`.
 - Lab Materials are published at [https://github.com/soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs).
+  - I also post slides on Canvas, but will sometimes update previous slides in the GitHub repo.
 
 ## Important Deadlines
 
@@ -85,8 +86,12 @@ auto-agenda:
 
 - A free and open-source language for statistical computing and graphics.
 - How to install `R` from [CRAN (The Comprehensive R Archive Network)](https://cloud.r-project.org/).
-  - Mac: choose "R-4.2.3-arm64.pkg" for Apple silicon Macs (M1 or higher); otherwise choose "R-4.2.3.pkg".
-  - Windows: quite straightforward ...
+  - Mac:
+    - choose "R-4.2.3-arm64.pkg" for Apple silicon Macs (M1 or higher)
+    - otherwise choose "R-4.2.3.pkg".
+  - Windows:
+    - click "install R for the first time"
+    - also click "RTools"
 - Two components:
   - `R` console
     - run command on it to generate corresponding output.
@@ -138,26 +143,32 @@ auto-agenda:
 ## Written by Matthew Blackwell 
 ## See here: https://github.com/mattblackwell/qsslearnr
 
-# install.packages(remotes)
+# 1. Install `remotes` package: install.packages(remotes)
 
-## Install the following packages by running:
+## 2. Install the following packages by running:
 remotes::install_github("kosukeimai/qss-package", build_vignettes = TRUE)
 remotes::install_github("rstudio/learnr")
 remotes::install_github("rstudio-education/gradethis")
 remotes::install_github("mattblackwell/qsslearnr")
 
-## See all available tutorials for QSS
+## 3. See all available tutorials for QSS
 learnr::run_tutorial(package = "qsslearnr")
 
-## Run a particular tutorial
+## 4. Run a particular tutorial
 learnr::run_tutorial("00-intro", package = "qsslearnr")
 
-## If you have problems generating PDF from Rmarkdown
+## 5. If you have problems generating PDF from Rmarkdown
 ## install tinytex by running (takes some time!): 
 # install.packages('tinytex')
 # tinytex::install_tinytex()
 
 ```
+
+- For Mac users, sometimes the installation of `qss` package may fail because `pandoc` or `curl` is not installed or upgraded (if you don't encounter these problems, no need to look at this!).
+  - [`pandoc`](https://pandoc.org/) is used to convert documents to other types, e.g. convert `.html` to `.pdf` or `.docx`.
+  - [`curl`](https://curl.se/) is used to transfer data through URLs.
+  - To install or upgrade `pandoc` or `curl`, we can first install the package manager [Homebrew](https://brew.sh/), and then install them by using `brew install pandoc` or `brew install curl` in Mac Terminal.
+
 
 ---
 
