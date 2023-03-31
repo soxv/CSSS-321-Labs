@@ -9,6 +9,11 @@ format:
     self-contained: true
     footer: "CSSS/SOC/STAT 321 Data Science and Statistics for Social Scicence I"
     logo: "https://csss.uw.edu/assets/csss-logo.png"
+execute: 
+  echo: true
+  #eval: false
+  warning: false
+  message: false
 filters:
   - reveal-auto-agenda
 auto-agenda:
@@ -24,7 +29,7 @@ auto-agenda:
   - AC: Wed & Fri 11:30 am - 12:20 pm, Denny 213
   - AD: Wed & Fri 12:30 pm - 1:20 pm, Thompson 334
 - Office Hours:
-  - Fri 1:30 pm - 2:30 pm or by appointment, Smith 35
+  - Fri 1:30 pm - 3:30 pm or by appointment, Smith 35
 - The Goal of Labs
   - Review Course Materials, esp. readings and assignments.
   - Develop Coding Skills and Practices in `R`.
@@ -89,9 +94,10 @@ auto-agenda:
   - Mac:
     - choose "R-4.2.3-arm64.pkg" for Apple silicon Macs (M1 or higher)
     - otherwise choose "R-4.2.3.pkg".
+    - also install the Command Line Tools by typing `xcode-select --install` in your terminal if you haven't done so. It helps compile some `R` packages that rely on other languages such as C++ or Fortran.
   - Windows:
     - click "install R for the first time"
-    - also click "RTools"
+    - also click "RTools" and install it. Rtools can help compile some `R` packages that rely on other languages such as C++ or Fortran.
 - Two components:
   - `R` console
     - run command on it to generate corresponding output.
@@ -143,7 +149,7 @@ auto-agenda:
 ## Written by Matthew Blackwell 
 ## See here: https://github.com/mattblackwell/qsslearnr
 
-# 1. Install `remotes` package: install.packages(remotes)
+# 1. Install `remotes` package: install.packages("remotes")
 
 ## 2. Install the following packages by running:
 remotes::install_github("kosukeimai/qss-package", build_vignettes = TRUE)
@@ -159,7 +165,7 @@ learnr::run_tutorial("00-intro", package = "qsslearnr")
 
 ## 5. If you have problems generating PDF from Rmarkdown
 ## install tinytex by running (takes some time!): 
-# install.packages('tinytex')
+# install.packages("tinytex")
 # tinytex::install_tinytex()
 
 ```
@@ -172,14 +178,137 @@ learnr::run_tutorial("00-intro", package = "qsslearnr")
 
 ---
 
-# Voter Turnout Data
+# QSS Exercise
+
+## QSS Tutorial 0
+
+Any questions?
+
+## Bias in Self-Reported Turnout
+
+- Use `read.csv()` to load the voter turnout data
+  - If your datasets are stored in other formats, such as `.xlsx`, `.sav` or `.dta`, you need external packages such as `readxl`, `foreign` or `haven` to help you load your datasets.
+- File management practices in `R`
+  - Option 1: Use `setwd()` to open target folder as current working directory in `R`.
+  - Option 2: Open your target folder as an `R` project.
+- In this exercise, we will also explore how to visualize data in `R` in two different ways:
+  - R `base` graphics: require more code to generate plots, but is more flexible.
+  - `ggplot2`: requires less code to generate plots, but is more restrictive, e.g. we need to transform the data before plotting.
+
+---
+
+|Variable|Description|
+|---|---|
+|`year`|election year|
+|`ANES`|ANES estimated turnout rate|
+|`VEP`|voting eligible population (in thousands)|
+|`VAP`|voting age population (in thousands)|
+|`total`|total ballots cast for highest office (in thousands)|
+|`felons`|total ineligible felons (in thousands)|
+|`noncitizens`|total noncitizens (in thousands)|
+|`overseas`|total eligible overseas voters (in thousands)|
+|`osvoters`|total ballots counted by overseas voters (in thousands)|
+
+---
+
+1. Load the data into `R` and check the dimensions of the data. Also, obtain a summary of the data. How many observations are there? What is the range of years covered in this data set?
 
 ```{r}
 
-turnout <- read.csv("./data/turnout.csv")
-turnout
+turnout <- read.csv("./data/turnout.csv") # load the dataset as a data.frame in R
+
+dim(turnout) # the dimensions of the dataset: 14 rows (observations) x 9 columns (variables)
+# we can also use `nrow()` to solely fetch the number of rows
+# and `ncol()` to solely fetch the number of columns
+head(turnout, n = 5) # the first 5 rows of the dataset
+summary(turnout) # get the range and quartiles of each variable
+
+turnout$year # we use `$` to get specific variables from the data.frame; this is a vector of year
+# alternatively, we can use `turnout[, "year"]` to do the same thing.
+length(turnout$year) # the length of `year` vector is 14.
 
 ```
 
+---
+
+2. Calculate the turnout rate based on the voting age population or VAP. Note that for this data set, we must add the total number of eligible overseas voters since the VAP variable does not include these individuals in the count. Next, calculate the turnout rate using the voting eligible population or VEP. What difference do you observe? (Additionally, how can we visualize the temporal change in this difference?)
+
+```{r}
+
+turnout$tr_vap <- turnout$total / (turnout$VAP + turnout$overseas) * 100
+turnout$tr_vep <- turnout$total / turnout$VEP * 100
+turnout$tr_vep - turnout$tr_vap
+plot(
+  tr_vep - tr_vap ~ year, # variable on y-axis ~ variable on x-axis
+  data = turnout, # the dataset from which we extract variables for plotting
+  type = "l", # the type of plot; we use lines to visualize the time series 
+  xlab = "Year", ylab = "VEP-based TR - VAP-based TR (%)", # labels of x- and y-axis
+  xaxt = "n" # override previous x-axis breaks
+)
+axis(
+  side = 1, # redraw the breaks of x-axis to reflect four-year election cycle
+  at = seq(1980, 2008, 4) # highlight presidential election year
+)
+```
+
+---
+
+3. Compute the differences between the VAP and ANES estimates of turnout rate. How big is the difference on average? What is the range of the differences? Conduct the same comparison for the VEP and ANES estimates of voter turnout. Briefly comment on the results.
+
+```{r}
+
+diff_vap <- turnout$ANES - turnout$tr_vap
+summary(diff_vap)
+diff_vep <- turnout$ANES - turnout$tr_vep
+summary(diff_vep)
+```
+
+---
+
+4. Compare the VEP turnout rate with the ANES turnout rate separately for presidential elections and midterm elections. Note that the data set excludes the year 2006. Does the bias of the ANES estimates vary across election types?
+
+```{r}
+
+turnout$midterm <- ifelse(turnout$year %% 4 != 0, 1, 0) # presidential elections take place in leap year (can be divided by 4); thus, we can use this fact to recognize the midterm election year
+turnout$tr_vep[turnout$midterm == 0]
+turnout$tr_vep[turnout$midterm == 1]
+mean(turnout$tr_vep[turnout$midterm == 0]) - mean(turnout$tr_vep[turnout$midterm == 1])
+```
+
+---
+
+5. Divide the data into half by election years such that you subset the data into two periods. Calculate the difference between the VEP turnout rate and the ANES turnout rate separately for each year within each period. Has the bias of ANES increased over time?
+
+```{r}
+
+diff_vep[1:7]
+diff_vep[8:14]
+mean(diff_vep[8:14]) - mean(diff_vep[1:7])
+```
+
+
+---
+
+6. ANES does not interview prisoners and overseas voters. Calculate an adjustment to the 2008 VAP turnout rate. Begin by subtracting the total number of ineligible felons and noncitizens from the VAP to calculate an adjusted VAP. Next, calculate an adjusted VAP turnout rate, taking care to subtract the number of overseas ballots counted from the total ballots in 2008. Compare the adjusted VAP turnout with the unadjusted VAP, VEP, and the ANES turnout rate. Briefly discuss the results. (Additionally, how can we visualize the comparison among the 4 types of turnout rate?)
+
+```{r}
+
+turnout$adj_tr_vap <- (turnout$total - turnout$overseas) / (turnout$VAP - turnout$felons - turnout$noncit) * 100
+
+# install.packages("tidyverse")
+library(tidyverse)
+turnout %>% # we use the pipe operator `%>%` to avoid repeatedly referring to the dataset in subsequent functions
+  pivot_longer( # we use `pivot_longer()` to reshape data from wide form to long form, which is more efficient for visualization; see `vignette("pivot")`.
+    c("tr_vap", "tr_vep", "ANES", "adj_tr_vap"), # we plan to convert these columns into one variable
+    names_to = "type", values_to = "turnout_rate"
+  ) %>%
+  ggplot(aes(x = year, y = turnout_rate, group = type), data = .) +
+    geom_line(aes(color = type)) +
+    scale_x_continuous(breaks = seq(1980, 2008, 4)) + # redraw x-axis breaks to match presidential election cycle
+    scale_color_discrete(name = "Type", labels = c("Adj. VAP", "ANES", "VAP", "VEP")) +
+    labs(x = "Year", y = "Turnout Rate (%)") +
+    theme_bw()
+
+```
 
 
