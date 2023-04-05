@@ -1,0 +1,670 @@
+---
+title: "CSSS/SOC/STAT 321: Lab 2"
+subtitle: "Potential Outcome & Randomized Experiment"
+author: "Tao Lin"
+format: 
+  revealjs:
+    smaller: true
+    scrollable: true
+    self-contained: true
+    slide-number: true
+    reference-location: "document"
+    link-external-icon: true
+    link-external-newwindow: true
+    footnotes-hover: true
+    html-math-method: katex
+    footer: "CSSS/SOC/STAT 321 Data Science and Statistics for Social Scicence I"
+    logo: "https://csss.uw.edu/assets/csss-logo.png"
+execute: 
+  echo: true
+  #eval: false
+  warning: false
+  message: false
+filters:
+  - reveal-auto-agenda
+  - parse-latex
+  - latex-environment
+auto-agenda:
+  bullets: bullets
+  heading: Agenda
+environments: [table]
+---
+
+## Goals in Week 2
+
+- QSS Tutorial 1: use conditions (e.g. `sex == "female"`) and logical operation (`TRUE` or `FALSE`; `&`, `|`, `!`) to subset a `data.frame` and calculate difference in means.
+- Introduce RMarkdown
+- Key Questions in This Week
+  - What is potential outcome?
+  - How can we use potential outcome to identify the causal effect of a specific policy (treatment)?
+  - Why can randomized experiment help us identify causal effect?
+  - How do we get the causal effect in a randomized experiment?
+
+# Introduction to RMarkdown
+
+## What is Markdown?
+
+Markdown is a lightweight markup language that you can use to add formatting elements to plaintext text documents.
+
+Here are some typical examples of Markdown grammar. For more information, see [Markdown Guide](https://www.markdownguide.org/getting-started/).
+
+:::{.panel-tabset}
+
+### Emphasizing Texts
+
+:::{.columns}
+
+::: {.column width="45%"}
+
+#### What you type ...
+
+`this is *italics*`
+
+`this is also _italics_`
+
+`this is **bold**`
+
+`this is ***bold italics***`
+
+:::
+
+::: {.column width="45%"}
+
+#### What you get ...
+
+this is *italics*
+
+this is also _italics_
+
+this is **bold**
+
+this is ***bold italics***
+
+:::
+
+:::
+
+### Creating Lists
+
+:::{.columns}
+
+::: {.column width="45%"}
+
+#### What you type ...
+
+`- unnumbered lists`
+
+`- look like this`
+
+&#160;&#160;&#160;&#160;`- this is a nested bullet point`
+
+`1. numbered lists`
+
+`2. look like this`
+
+:::
+
+::: {.column width="45%"}
+
+#### What you get ...
+
+- unnumbered lists
+- look like this
+  - this is a nested bullet point
+
+1. numbered lists
+2. look like this
+
+:::
+
+:::
+
+### Creating Headings
+
+:::{.columns}
+
+::: {.column width="45%"}
+
+#### What you type ...
+
+`##### Level 5 heading`
+
+`###### Level 6 heading`
+
+`####### Level 7 heading`
+
+:::
+
+::: {.column width="45%"}
+
+#### What you get ...
+
+##### Level 5 heading
+###### Level 6 heading
+####### Level 7 heading
+
+:::
+
+:::
+
+### Inserting Math Equations
+
+:::{.columns}
+
+::: {.column width="45%"}
+
+#### What you type ...
+
+Inline equation: `$\tau = \frac{1}{n} \sum_{i=1}^n [Y_i(1) - Y_i(0)]$`
+
+Separate equation block:
+
+`$$`
+
+`\tau = \frac{1}{n} \sum_{i=1}^n [Y_i(1) - Y_i(0)]`
+
+`$$`
+
+:::
+
+::: {.column width="45%"}
+
+#### What you get ...
+
+Inline equation: $\tau = \frac{1}{n} \sum_{i=1}^n [Y_i(1) - Y_i(0)]$
+
+Separate equation block:
+
+$$
+\tau = \frac{1}{n} \sum_{i=1}^n [Y_i(1) - Y_i(0)]
+$$
+
+:::
+
+:::
+
+### Inserting Hyperlinks
+
+:::{.columns}
+
+::: {.column width="45%"}
+
+#### What you type ...
+
+<font size = "1"> `[GitHub Repo for Our Labs](https://github.com/soxv/CSSS-321-Labs)` </font>
+
+:::
+
+::: {.column width="45%"}
+
+#### What you get ...
+
+[GitHub Repo for Our Labs](https://github.com/soxv/CSSS-321-Labs)
+
+:::
+
+:::
+
+### Inserting Images
+
+:::{.columns}
+
+::: {.column width="45%"}
+
+#### What you type ...
+
+<font size = "1"> `![Insert an image from the target folder](./img/rmarkdown.png)` </font>
+
+<font size = "1"> `![Insert an image from the web](https://csss.uw.edu/assets/csss-logo.png)` </font>
+
+:::
+
+::: {.column width="45%"}
+
+#### What you get ...
+
+![Insert an image from the target folder](./img/rmarkdown.png){width=100}
+
+![Insert an image from the web](https://csss.uw.edu/assets/csss-logo.png){width=100}
+
+:::
+
+:::
+
+### Creating Tables
+
+:::{.columns}
+
+::: {.column width="45%"}
+
+#### What you type ...
+
+<font size = "1"> `| **Left-aligned** | *Center-aligned* | Right-aligned |` </font>
+
+<font size = "1"> `|:-----------------|:---------------:|---------------:|` </font>
+
+<font size = "1"> `| Apple \| Fruit   | Banana          | Cherry         |` </font>
+
+<font size = "1"> `| Dog              | Cat             | Bird           |` </font>
+
+<font size = "1"> `| 1                | 2               | 3              |` </font>
+
+<font size = "1"> `Table: This is an example table caption.` </font>
+
+:::
+
+::: {.column width="45%"}
+
+#### What you get ...
+
+| **Left-aligned** | *Center-aligned* | Right-aligned |
+|:-----------------|:---------------:|---------------:|
+| Apple \| Fruit   | Banana          | Cherry         |
+| Dog              | Cat             | Bird           |
+| 1                | 2               | 3              |
+Table: This is an example table caption.
+
+:::
+
+:::
+
+### Using Blockquotes
+
+:::{.columns}
+
+::: {.column width="45%"}
+
+#### What you type ...
+
+`This is normal text`
+
+`> This is a block quote`
+
+:::
+
+::: {.column width="45%"}
+
+#### What you get ...
+
+This is normal text
+
+> This is a block quote
+
+:::
+
+:::
+
+:::
+
+## What is RMarkdown?
+
+- RMarkdown = `R` + Markdown
+  - RMarkdown documents are fully reproducible. Use a productive *notebook interface* to weave together narrative **text** and **code** to produce *elegantly formatted output*. Use multiple languages including `R`, Python, and SQL.
+  - RMarkdown supports dozens of static and dynamic output formats including HTML, PDF, MS Word, Beamer, HTML5 slides, Tufte-style handouts, books, dashboards, shiny applications, scientific articles, websites, and more.
+
+- Installing RMarkdown: `install.packages("rmarkdown")`
+- Let RMarkdown generate PDF:
+  - `install.packages(tinytex)` and `tinytex::install_tinytex`
+  -  Install [`pandoc`](https://pandoc.org/installing.html).
+- In 2022, RStudio (currently Posit) release [Quarto](https://quarto.org/).
+  - An ambitious "next-gen" tool that aims to replace R Markdown and Jupyter Notebook.
+  - The section slides are powered by Quarto and [Reveal.js](https://quarto.org/docs/presentations/revealjs/).
+
+## How to Use RMarkdown
+
+- YAML header
+  - YAML is a human-readable data serialization language that is often used for writing *configuration files*.
+  - Specify options between `---`
+- Code
+  - Use ``` for code chunk
+  - Use ` for inline code
+  - Specify which programming language for the code
+  - - R Markdown can not only run `R`, but also run python!
+    - `install.packages("reticulate")` and `library(reticulate)`
+    - Use `py$...` to call objects from previous Python chunk to `R` chunk.^[See [https://rstudio.github.io/reticulate/articles/calling_python.html](https://rstudio.github.io/reticulate/articles/calling_python.html).]
+    - Use `r. ...` to call objects from previous `R` chunk to Python chunk.
+- Code chunk display options
+  - Can be local options to each chunk
+  - Or global to the whole document by tweaking the first default code chunk in every `.Rmd`.
+  - Useful display options:
+    - `include = TRUE`: hide code chunk
+    - `fig.align = "center"`: adjust figure alignment
+    - `warning = FALSE`: hide warnings
+    - `message = FALSE`: hide messages
+- Source mode vs. visual mode in RStudio
+- Use outline to jump between sections if your documents get too long.
+- For advanced RMarkdown usage, see [R Markdown: The Definitive Guide](https://bookdown.org/yihui/rmarkdown/).
+
+# Potential Outcome
+
+## Defining Causal Effects
+
+- Units: $i = 1, 2, \ldots, n$
+
+- Treatment variable (binary)[^1]: 
+
+[^1]: Note that a treatment variable can also be continuous or a bundle of multiple treatments.
+
+$$
+T_i = \begin{cases}
+1 & \text{if treated} \\
+0 & \text{if control}
+\end{cases}
+$$
+
+- Pre-treatment covariates: $X_i$
+
+- Observed outcomes: $Y_i$
+
+- Potential outcomes:
+  - $Y_i(1)$: outcome that unit $i$ would have if treated.
+  - $Y_i(0)$: outcome that unit $i$ would have if untreated.
+
+- Causal Effect for unit $i$: $\tau_i = Y_i(1) - Y_i(0)$
+  - We calculate the difference between observed outcome (factual) and (unobserved) potential outcome (counterfactual) as causal effect for unit $i$
+
+::: {.table}
+\centering
+\begin{tabular}{ccccccc}
+\hline
+Voter & Gender & Age & Contact & \multicolumn{2}{c}{Turnout} & Causal Effect \\
+$i$ & $X_{i1}$ & $X_{i2}$ & $T_i$ & $Y_i(0)$ & $Y_i(1)$ & $Y_i(1) - Y_i(0)$ \\ \hline
+$1$ & M & 25 & 1 & 0 & ??? &  \\
+$2$ & F & 38 & 0 & ??? & 1 &  \\
+$3$ & F & 67 & 0 & ??? & 1 &  \\
+$\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &  \\
+$n$ & M & 43 & 1 & 1 & ??? &  \\ \hline
+\end{tabular}
+:::
+
+---
+
+- Causal Inference as a missing data problem
+  - Only one potential outcome is observed for each unit.
+  - How do we infer the missing potential outcomes?
+    - Design-based inference: we design a manipulation in which $x$ causes $y$. ("No causation without manipulation." - Holland 1986)
+      - But sometimes we cannot manipulate *immutable characteristics*, such as sex, race, etc.
+    - Model-based inference: we assume a model/theory in which $x$ causes $y$.
+  - Two scenarios
+    - Experiment: researcher can control and know the assignment of treatment
+    - Observational studies: researcher cannot control and cannot exactly know the assignment of treatment
+
+## Key Assumptions
+
+To identify $\tau_i$ as causal effect, we need to assume ...
+
+1. **Causal ordering**: $T_i \rightarrow Y_i$
+  - Potential violation: Outcome $Y_i$ reversely affect Treatment $T_i$ (feedback effect); or $Y_i$ and $T_i$ are generated simultaneously.
+
+2. **No interference** between units: $Y_i(T_1, T_2, \ldots, T_i, \ldots, T_n) = Y_i(T_i)$
+  - Potential violation: treatments of other units affecting one’s outcome (spillover effect)
+
+3. **Consistency**: $Y_i = Y_i(T_i)$ if $T_i = t$
+  - That is, we observe the potential outcome of observed treatment.
+  - Potential violation: there is a hidden or multiple version(s) of treatment, e.g., the quality of medicine or the method of administering the treatment is different across units.[^2]
+
+Last two combined: **SUTVA** (stable unit-treatment variation assumption)
+
+[^2]: For detailed explanation on why we need this theoretical assumption, see [https://stats.stackexchange.com/questions/304799/in-causal-inference-in-statistics-how-do-you-interpret-the-consistency-assumpti](https://stats.stackexchange.com/questions/304799/in-causal-inference-in-statistics-how-do-you-interpret-the-consistency-assumpti).
+
+## Causal Estimands
+
+:::{.callout-note title="Statistical Jargons: Estimand, Estimator, and Estimate"}
+- **Estimand** (quantitle of interest/target of estimation): parameter in a population to be estimated in a statistical analysis.
+- **Estimator** (method of estimation): a rule, formula, or algorithm for calculating an estimate of a given quantity based on observed data under some reasonable assumptions.
+- **Estimate** (numerical result of estimation): a numerical value computed by an estimator.
+:::
+
+- **Sample Average Treatment Effect** (SATE): Average outcomes if everyone is treated vs. no one. For the most time in this class, we focus on SATE.
+
+$$
+\text{SATE} = \frac{1}{n} \sum_{i=1}^n Y_i(1) - Y_i(0)
+$$
+
+- **Sample Average Treatment Effect for the Treated** (SATT): Average outcomes if everyone is treated vs. no one in the treatment group. It is useful when:
+  - we only want to focus on people who are affected by specific policy
+  - we cannot provide treatment to the entire population due to resource constraints or ethical consideration (e.g. HIV/AIDS prevention for sex workers).
+  - we are interested in heterogeneous treatment effects on the treated group, especially when treatment is not randomly assigned.
+
+$$
+\text{SATT} = \frac{1}{n_1} \sum_{i=1}^n T_i \cdot [ Y_i(1) - Y_i(0) ]
+$$
+
+---
+
+- Likewise, we have PATE and PATT when we are interested in the causal effect for the large or infinite population:
+  - The notation $\mathbb{E}(\cdot)$ means *expectation*. In the context of PATE, it means "the expected value of ATE if we sample from the population and calculate ATE for many times."
+  - The notation $|$ means "given." In the case of PATT, it means that we calculate the ATE only based on treated people.
+
+$$
+\begin{aligned}
+\text{PATE} =& \mathbb{E}[Y_i(1) - Y_i(0)] \\
+\text{PATT} =& \mathbb{E}[Y_i(1) - Y_i(0) | T_i = 1]
+\end{aligned}
+$$
+
+- **Conditional Average Treatment Effect** (CATE):
+  - e.g. the ATE for male ($X_i = \text{Male}$) and female ($X_i = \text{Female}$) might be different.
+
+$$
+\text{CATE} = \mathbb{E}[Y_i(1) - Y_i(0) | X_i = x]
+$$
+
+- Non-additive Effects
+  - **Quantile Treatment Effect**
+    - e.g. $\text{median}[Y_i(1)] - \text{median}[Y_i(0)]$
+    - How does a policy shift a particular quantile of the outcome distribution?
+  - **Odds Ratio**: how much more likely is an outcome to occur in the group exposed to a treatment, compared to the group not exposed to it? If the odds ratio is greater than 1, it means the outcome is more likely to occur in the treated group compared to the untreated group.
+    - $a$: The outcome occurred in the treated group
+    - $b$: The outcome did not occur in the treated group 
+    - $c$: The outcome occurred in the non-exposed group
+    - $d$: The outcome did not occur in the non-exposed group
+
+$$
+\text{OR} = \frac{\frac{a}{b}}{\frac{c}{d}} = \frac{\frac{\text{Pr}[Y_i(1) = 1]}{\text{Pr}[Y_i(1) = 0]}}{\frac{\text{Pr}[Y_i(0) = 1]}{\text{Pr}[Y_i(0) = 0]}}
+$$
+
+# Randomized Experiment
+
+## Why Randomize Treatment Assignment?
+
+QSS p.50:
+
+> By randomly assigning each subject to either the treatment or control group, we ensure that ... the treatment and control groups are _on average identical to each other in terms of all **pretreatment** characteristics_, both observed and unobserved. Since the only systematic difference between the two groups is the receipt of treatment, we can interpret the difference in the outcome variable as the estimated average causal effect of the treatment. In this way, the randomization of treatment assignment separates the causal effect of treatment from other possible factors that may influence the outcome.
+
+- We need to check the balance of pre-treatment variables after randomization, to make sure that treated and control groups are on average identical.
+- In statistical jargon, randomization can guarantee **unconfoundedness**. Because any observable and unobservable characteristics could affect potential outcomes, by randomization, we break any link between treatment assignment and these characteristics, and make treatment assignment independent of potential outcomes:
+
+$$
+T_i \perp \!\!\! \perp Y_i(0), Y_i(1)
+$$
+
+## Difference-in-Means (Neyman) Estimator
+
+$$
+\hat{\tau}^\text{dif} = \bar{Y}_t^\text{obs} - \bar{Y}_c^\text{obs} = \frac{1}{n_1} \sum_{i:T_i=1} Y_i^\text{obs} - \frac{1}{n_0} \sum_{i:T_i=0} Y_i^\text{obs}
+$$
+
+---
+
+### Unbiasedness of $\hat{\tau}^\text{dif}$
+
+Under the assumption of consistency and unconfoundedness, we can prove that the difference-in-means estimator is an **unbiased** estimator for SATE. The term "unbiased" means the expected value of this difference-in-means estimator equals SATE, i.e., if we sample from population and calculate it multiple times, we will get the correct answer on average.
+
+**Proof**:
+
+Because observed outcome is the realized potential outcome (consistency assumption), we can rewrite $\hat{\tau}^\text{dif}$ as
+
+$$
+\begin{aligned}
+\hat{\tau}^{\mathrm{dif}}=& \frac{1}{n} \sum_{i=1}^{n}\left(\frac{T_{i} \cdot Y_{i}}{n_1 / n}-\frac{\left(1-T_{i}\right) \cdot Y_{i}}{n_0 / n}\right) \\
+=& \frac{1}{n} \sum_{i=1}^{n}\left(\frac{T_{i} \cdot Y_{i}(1)}{n_1 / n}-\frac{\left(1-T_{i}\right) \cdot Y_{i}(0)}{n_0 / n}\right)
+\end{aligned}
+$$
+
+Hence, the expectation of $\hat{\tau}^\text{dif}$ is[^3]
+
+[^3]: Note that the only random part is the treatment, so we only need to take the expectation over $T_i$.
+
+$$
+\begin{aligned}
+\mathbb{E}_{T}\left[\hat{\tau}^{\mathrm{dif}} \mid \mathbf{Y}(0), \mathbf{Y}(1)\right] &=\frac{1}{n} \sum_{i=1}^{n}\left(\frac{\mathbb{E}_{T}\left[T_{i}\right] \cdot Y_{i}(1)}{n_1 / n}-\frac{\mathbb{E}_{T}\left[1-T_{i}\right] \cdot Y_{i}(0)}{n_0 / n}\right) \\
+&= \frac{1}{n} \sum_{i=1}^{n}\left(\frac{n_1/n \cdot Y_{i}(1)}{n_1 / n}-\frac{n_0/n \cdot Y_{i}(0)}{n_0 / n}\right) \\
+&= \underbrace{\frac{1}{N} \sum_{i=1}^{N}\left[Y_{i}(1)-Y_{i}(0)\right]}_\text{SATE}
+\end{aligned}
+$$
+
+---
+
+### Uncertainty of $\hat{\tau}^\text{dif}$
+
+We can prove that the sampling variance of $\hat{\tau}^\text{dif}$ is
+$$
+\mathbb{V}_{T}\left(\bar{Y}_{\mathrm{t}}^{\mathrm{obs}}-\bar{Y}_{\mathrm{c}}^{\mathrm{obs}}\right)=\frac{S_{c}^{2}}{n_0}+\frac{S_{t}^{2}}{n_1}-\frac{S_{t c}^{2}}{n}
+$$
+where $S_c^2$ and $S_t^2$ are the variance of potential outcomes $Y_i(0)$ and $Y_i(1)$ in the sample, defined as:
+$$
+S_{c}^{2}=\frac{1}{n-1} \sum_{i=1}^{n}\left(Y_{i}(0)-\bar{Y}(0)\right)^{2}, \quad \text { and } \quad S_{t}^{2}=\frac{1}{n-1} \sum_{i=1}^{n}\left(Y_{i}(1)-\bar{Y}(1)\right)^{2}
+$$
+and $S_{tc}^2$ is the sample variance of the unit-level treatment effects, defined as:
+$$
+\begin{align}
+S_{t c}^{2} &=\frac{1}{n-1} \sum_{i=1}^{N}\left\{Y_{i}(1)-Y_{i}(0)-[\bar{Y}(1)-\bar{Y}(0)]\right\}^{2} \\
+&=\frac{1}{n-1} \sum_{i=1}^{N}\left(Y_{i}(1)-Y_{i}(0)-\tau_\text{SATE}\right)^{2}
+\end{align}
+$$
+which is unobservable. This term will diminish to zero when treatment effect is constant across unit. Because the term $S_{tc}^2$ is a non-negative value, we can drop this term and use the following estimator as a conservative upper bound for the sampling variance of $\hat{\tau}^\text{dif}$:
+
+$$
+\mathbb{V}_{T}\left(\bar{Y}_{\mathrm{t}}^{\mathrm{obs}}-\bar{Y}_{\mathrm{c}}^{\mathrm{obs}}\right) \leq \frac{S_{c}^{2}}{n_0}+\frac{S_{t}^{2}}{n_1}
+$$
+
+For detailed proof, see Imbens and Rubin (2015) Chapter 6.
+
+## (Fisher's) Permutation Inference
+
+Alternatively, we can ask a question: "Is the observed difference between the treated and control group attributed to the treatment or by chance?"
+
+Imagine you have two groups of students, Group A and Group B. Both groups took a test, and now you want to know if one group did better because of a special study technique, or if it was just by chance. We can conduct a permutation test in the following steps:
+
+1. First, we calculate the difference in average test scores between Group A and Group B. This is our observed difference.
+2. Next, we pretend that it doesn't matter which group each student was in and mix up all the test scores.
+3. Then, we randomly divide the mixed-up scores into two new groups with the same number of students as the original groups. We calculate the difference in average test scores between these two new groups.
+4. We repeat step 3 many times, creating lots of random groups and calculating the differences in average test scores for each pair of groups.
+5. Finally, we compare our observed difference (from step 1) to all the differences we got from the random groups (from steps 3 and 4). We count how many times the random differences were as big or bigger than the observed difference.
+
+If only a few of the random differences (like 5% or less) are as big or bigger than the observed difference, we say that the difference between the original groups is significant, and it's likely not due to chance.
+
+## Neyman's Approach vs. Fisher's Approach
+
+- Fisher's approach does not have an assumption over the distribution of data.
+- Fisher's approach is based on a much stronger hypothesis that the treatment have zero effect on every unit (i.e. $H_0: Y_i(1) = Y_i(0)$), which is also called **Sharp Null Hypothesis**.
+  - It is stronger than Neyman's approach because when we hypothesize that the ATE equals zero, it is still possible that the treatment effect can be positive for some individuals and negative for others.
+  - The sharp null hypothesis guarantees the exchangeability of individuals so that we can randomly permute them. To see why, let's consider previous test score example with 6 students:
+
+:::{.panel-tabset}
+
+### Calculating Difference
+
+The difference in means is $\frac{90 + 85 + 88}{3} - \frac{80 + 85 + 78}{3} = 10$.
+
+:::{.table}
+\centering
+\begin{tabular}{cccc}
+\hline
+Student & Group & \multicolumn{2}{c}{Test Score} \\
+$i$ & $T_i$ & $Y_i(0)$ & $Y_i(1)$ \\ \hline
+$1$ & 1 & {\textcolor{blue}{???}} & 90 \\
+$2$ & 1 & {\textcolor{blue}{???}} & 85 \\
+$3$ & 1 & {\textcolor{blue}{???}} & 88 \\
+$4$ & 0 & 80 & {\textcolor{blue}{???}} \\
+$5$ & 0 & 85 & {\textcolor{blue}{???}} \\
+$6$ & 0 & 78 & {\textcolor{blue}{???}} \\ \hline
+\end{tabular}
+:::
+
+### Imputing Missing Data
+
+We now impute the missing potential outcomes based on the sharp null hypothesis that there is no effect on every student, that is, the potential outcomes are exactly the same as observed outcomes. Because the observed outcomes and potential outcomes are identical, it doesn't matter to mix up and randomly divide students again and again.
+
+:::{.table}
+\centering
+\begin{tabular}{cccc}
+\hline
+Student & Group & \multicolumn{2}{c}{Test Score} \\
+$i$ & $T_i$ & $Y_i(0)$ & $Y_i(1)$ \\ \hline
+$1$ & 1 & {\textcolor{blue}{90}} & 90 \\
+$2$ & 1 & {\textcolor{blue}{85}} & 85 \\
+$3$ & 1 & {\textcolor{blue}{88}} & 88 \\
+$4$ & 0 & 80 & {\textcolor{blue}{80}} \\
+$5$ & 0 & 75 & {\textcolor{blue}{75}} \\
+$6$ & 0 & 78 & {\textcolor{blue}{78}} \\ \hline
+\end{tabular}
+:::
+
+### 1st Permutation
+
+The difference in means is $\frac{90 + 85 + 80}{3} - \frac{88 + 85 + 78}{3} = 4$.
+
+:::{.table}
+\centering
+\begin{tabular}{cccc}
+\hline
+Student & Group & \multicolumn{2}{c}{Test Score} \\
+$i$ & $T_i$ & $Y_i(0)$ & $Y_i(1)$ \\ \hline
+$1$ & 1 & {\textcolor{blue}{90}} & 90 \\
+$2$ & 1 & {\textcolor{blue}{85}} & 85 \\
+$3$ & 0 & {\textcolor{blue}{88}} & 88 \\
+$4$ & 1 & 80 & {\textcolor{blue}{80}} \\
+$5$ & 0 & 75 & {\textcolor{blue}{75}} \\
+$6$ & 0 & 78 & {\textcolor{blue}{78}} \\ \hline
+\end{tabular}
+:::
+
+### 2nd Permutation
+
+The difference in means is $\frac{90 + 85 + 75}{3} - \frac{88 + 80 + 78}{3} = 2$.
+
+:::{.table}
+\centering
+\begin{tabular}{cccc}
+\hline
+Student & Group & \multicolumn{2}{c}{Test Score} \\
+$i$ & $T_i$ & $Y_i(0)$ & $Y_i(1)$ \\ \hline
+$1$ & 1 & {\textcolor{blue}{90}} & 90 \\
+$2$ & 1 & {\textcolor{blue}{85}} & 85 \\
+$3$ & 0 & {\textcolor{blue}{88}} & 88 \\
+$4$ & 0 & 80 & {\textcolor{blue}{80}} \\
+$5$ & 1 & 75 & {\textcolor{blue}{75}} \\
+$6$ & 0 & 78 & {\textcolor{blue}{78}} \\ \hline
+\end{tabular}
+:::
+
+### After $n$th Permutation
+
+The observed difference in means is 10, which is larger than any of the permuted difference in means, suggesting that the observed difference between the treated and control groups is unlikely to have occurred by chance alone. Based on this analysis, we might reject the sharp null hypothesis in favor of the alternative hypothesis, which states that the special study technique has a nonzero effect on at least some students.
+
+Permutation | Group A (Treated) | Group B (Control) | Difference in Means
+------------|-------------------|-------------------|--------------
+Original    |  90, 85, 88        |  80, 75, 78       |       10
+1           |  90, 85, 80        |  88, 75, 78       |        4
+2           |  90, 85, 75        |  88, 80, 78       |        2
+3           |  90, 85, 78        |  88, 80, 75       |        6
+4           |  90, 88, 80        |  85, 75, 78       |        5
+5           |  90, 88, 75        |  85, 80, 78       |        3
+6           |  90, 88, 78        |  85, 80, 75       |        7
+...         |  ...               |  ...              |      ...
+
+:::
+
+# Brookman and Kalla (2016)
+
+
+
+
+
+
+
+
+
+
