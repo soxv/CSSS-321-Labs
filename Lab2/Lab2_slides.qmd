@@ -327,7 +327,7 @@ This is normal text
   - Can be local options to each chunk
   - Or global to the whole document by tweaking the first default code chunk in every `.Rmd`.
   - Useful display options:
-    - `include = TRUE`: hide code chunk
+    - `echo = FALSE`: hide code chunk but not its output
     - `fig.align = "center"`: adjust figure alignment
     - `warning = FALSE`: hide warnings
     - `message = FALSE`: hide messages
@@ -369,11 +369,11 @@ $$
 \hline
 Voter & Gender & Age & Contact & \multicolumn{2}{c}{Turnout} & Causal Effect \\
 $i$ & $X_{i1}$ & $X_{i2}$ & $T_i$ & $Y_i(0)$ & $Y_i(1)$ & $Y_i(1) - Y_i(0)$ \\ \hline
-$1$ & M & 25 & 1 & 0 & ??? &  \\
-$2$ & F & 38 & 0 & ??? & 1 &  \\
-$3$ & F & 67 & 0 & ??? & 1 &  \\
+$1$ & M & 25 & 1 & ??? & 1 &  \\
+$2$ & F & 38 & 0 & 1 & ??? &  \\
+$3$ & F & 67 & 0 & 1 & ??? &  \\
 $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ & $\vdots$ &  \\
-$n$ & M & 43 & 1 & 1 & ??? &  \\ \hline
+$n$ & M & 43 & 1 & ??? & 1 &  \\ \hline
 \end{tabular}
 :::
 
@@ -545,7 +545,7 @@ For detailed proof, see Imbens and Rubin (2015) Chapter 6.
 
 Alternatively, we can ask a question: "Is the observed difference between the treated and control group attributed to the treatment or by chance?"
 
-Imagine you have two groups of students, Group A and Group B. Both groups took a test, and now you want to know if one group did better because of a special study technique, or if it was just by chance. We can conduct a permutation test in the following steps:
+Imagine you have two groups of students, Group A and Group B. Both groups took a test, and now you want to know if one group did better because of a special study technique (e.g. using ChatGPT), or if it was just by chance. We can conduct a permutation test in the following steps:
 
 1. First, we calculate the difference in average test scores between Group A and Group B. This is our observed difference.
 2. Next, we pretend that it doesn't matter which group each student was in and mix up all the test scores.
@@ -554,6 +554,8 @@ Imagine you have two groups of students, Group A and Group B. Both groups took a
 5. Finally, we compare our observed difference (from step 1) to all the differences we got from the random groups (from steps 3 and 4). We count how many times the random differences were as big or bigger than the observed difference.
 
 If only a few of the random differences (like 5% or less) are as big or bigger than the observed difference, we say that the difference between the original groups is significant, and it's likely not due to chance.
+
+The proportion of random differences that are larger than the observed difference is also called $p$-value. We will encounter the concept of $p$-value again in this class later. But Fisher's use of $p$-value is different from the prevailing (Neyman's) approach, because they are based on different null hypothesis. Don't mess them up!
 
 ## Neyman's Approach vs. Fisher's Approach
 
@@ -659,12 +661,149 @@ Original    |  90, 85, 88        |  80, 75, 78       |       10
 
 # Brookman and Kalla (2016)
 
+---
 
+<object data="/img/broockman_kalla_2016.pdf" type="application/pdf" width=100% height=100%> </object>
 
+---
 
+| Variable | Description |
+|----------|-------------|
+| `age` | Age of the respondent in years |
+| `female` | 1=respondent marked “Female” on voter registration, 0 otherwise |
+| `voted_gen_14` | 1 if respondent voted in the 2014 general election |
+| `vote_gen_12` | 1 if respondent voted in the 2012 general election |
+| `treat_ind` | 1 if respondent was assigned to treatment, 0 for control |
+| `racename` | character name of racial identity indicated on voter file |
+| `democrat` | 1 if respondent is a registered Democrat |
+| `therm_trans_t0` | 0-100 feeling thermometer about transgender people at baseline |
+| `therm_trans_t1` | 0-100 feeling thermometer about transgender people 3 days after treatment |
+| `therm_trans_t2` | 0-100 feeling thermometer about transgender people 3 weeks after treatment |
 
+---
 
+## 1. Check Balance After Randomization
 
+```{r}
 
+transphobia <- read.csv("./data/transphobia.csv")
+
+table(transphobia$treat_ind) |> prop.table() # check the balance of a treatment variable
+
+tapply(transphobia$age, transphobia$treat_ind, mean) # check balance for a single continuous or binary pre-treatment variable
+
+aggregate(
+  cbind(age, female, democrat, voted_gen_14, voted_gen_12) ~ treat_ind,
+  data = transphobia,
+  FUN = mean
+) # check balance for multiple continuous variables
+
+tapply(transphobia$treat_ind, transphobia$racename, mean) # check balance for a single categorical variable; note that we cannot calculate the mean of a categorical variable with more than 3 categories
+
+table(transphobia$racename) # look at the number of each category if we suspect imbalance
+
+```
+
+## 2. Calculate Difference in Means
+
+```{r}
+
+# method 1: subset the data.frame and calculate difference in means
+# take the baseline outcome as an example
+treated <- subset(transphobia, treat_ind == 1)
+control <- subset(transphobia, treat_ind == 0)
+mean(treated$therm_trans_t0) - mean(control$therm_trans_t0)
+
+# method 2: a more compact way ...
+# take the baseline outcome as an example
+tapply(transphobia$therm_trans_t0, transphobia$treat_ind, mean) |> # use tapply() to calculate the means of each group
+  rev() |> # reverse the order from 0 1 to 1 0
+  diff() # calculate the difference in means
+
+# a more compact way to calculate difference in means for baseline outcome and later periods
+library(tidyverse) # load the package tidyverse so that we can use the pipe operator `%>%`
+aggregate(
+  cbind(therm_trans_t0, therm_trans_t1, therm_trans_t2) ~ treat_ind,
+  data = transphobia,
+  FUN = mean
+) %>% # create a matrix that shows group means
+  rbind(., apply(., MARGIN = 2, diff)) # use apply() to calculate differences in each column;
+                                       # and use rbind() to concatenate the row of differences to previous matrix that shows group means;
+                                       # dot "." means the object generated from previous code.
+
+```
+
+## 3. Investigate Heterogeneous Treatment Effect Based on Gender
+
+```{r}
+
+# method 1: subset the data.frame and calculate difference in means
+# take the baseline outcome as an example
+treated_female <- subset(transphobia, treat_ind == 1 & female == 1)
+control_female <- subset(transphobia, treat_ind == 0 & female == 1)
+mean(treated_female$therm_trans_t0) - mean(control_female$therm_trans_t0)
+
+treated_male <- subset(transphobia, treat_ind == 1 & female == 0)
+control_male <- subset(transphobia, treat_ind == 0 & female == 0)
+mean(treated_male$therm_trans_t0) - mean(control_male$therm_trans_t0)
+
+# method 2: a more compact way to calculate CATE for baseline outcome and later periods
+aggregate(
+  cbind(therm_trans_t0, therm_trans_t1, therm_trans_t2) ~ treat_ind + female,
+  data = transphobia,
+  FUN = mean
+) %>%
+  rbind( # use rbind() to concatenate difference in means to the previous matrix showing group means
+    ., apply(., MARGIN = 2, function(x) {
+      c(
+        diff(x[1:2]), # calculate difference in means between the first two rows (i.e. treated and control within male group)
+        diff(x[3:4]) # calculate difference in means between the last two rows (i.e. treated and control within female group)
+      )
+    })
+  )
+
+```
+
+## Fisher's Exact $p$-value Approach
+
+```{r}
+#| fig-height: 15
+
+# 1. calculate observed difference in means
+obs_dif <- aggregate(
+  cbind(therm_trans_t0, therm_trans_t1, therm_trans_t2) ~ treat_ind,
+  data = transphobia, FUN = mean
+) %>%
+  apply(., MARGIN = 2, diff) %>%
+  .[-1] # we want to drop the first element, which is useless in our analysis
+
+# 2. mix up and randomly split people into two groups for many times
+n <- nrow(transphobia) # total number of people in the data
+transphobia$id <- 1:n # assign a unique id to each person
+rand_dif <- matrix(NA, nrow = 1000, ncol = 3) # create a 1000 x 3 matrix to store random differences
+set.seed(98105) # set a fixed random seed to make your randomization reproducible
+for (i in 1:1000) {
+  rand_ids <- sample(transphobia$id, size = 0.5 * n, replace = FALSE) # randomly sample half of IDs; we set `replace = FALSE` because we want sampling without replacement.
+  transphobia$fake_treat <- ifelse(transphobia$id %in% rand_ids, 1, 0) # sampled IDs will be assigned to a fake treated group
+  rand_dif[i, ] <- aggregate( # calculate difference in means between randomly split groups
+    cbind(therm_trans_t0, therm_trans_t1, therm_trans_t2) ~ fake_treat,
+    data = transphobia, FUN = mean
+  ) %>%
+    apply(., MARGIN = 2, diff) %>%
+    .[-1]
+}
+
+# 3. calculate the proportion of random differences that are greater than the observed difference
+sum(rand_dif[, 1] > obs_dif[1]) / length(rand_dif[, 1]) # baseline
+sum(rand_dif[, 2] > obs_dif[2]) / length(rand_dif[, 2]) # 3 days
+sum(rand_dif[, 3] > obs_dif[3]) / length(rand_dif[, 3]) # 3 weeks
+
+# plot the observed difference against random differences in a histogram
+par(mfrow = c(3, 1))
+hist(rand_dif[, 1], breaks = 20, xlab = "Baseline", main = ""); abline(v = obs_dif[1], col = "red")
+hist(rand_dif[, 2], breaks = 20, xlab = "3 Days", main = ""); abline(v = obs_dif[2], col = "red")
+hist(rand_dif[, 3], breaks = 20, xlab = "3 Weeks", main = ""); abline(v = obs_dif[3], col = "red")
+
+```
 
 
