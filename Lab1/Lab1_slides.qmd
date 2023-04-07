@@ -2,8 +2,12 @@
 title: "CSSS/SOC/STAT 321: Lab 1"
 subtitle: "Introduction to R/RStudio"
 author: "Tao Lin"
+office_hours: "Office Hours: Fri 1:30 - 3:30 PM Smith 35"
+slides_url: "Section Slides URL: [soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs)"
 format: 
   revealjs:
+    template-partials: 
+      - title-slide.html
     smaller: true
     scrollable: true
     self-contained: true

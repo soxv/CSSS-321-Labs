@@ -2,8 +2,12 @@
 title: "CSSS/SOC/STAT 321: Lab 2"
 subtitle: "Potential Outcome & Randomized Experiment"
 author: "Tao Lin"
+office_hours: "Office Hours: Fri 1:30 - 3:30 PM Smith 35"
+slides_url: "Section Slides URL: [soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs)"
 format: 
   revealjs:
+    template-partials:
+      - title-slide.html
     smaller: true
     scrollable: true
     self-contained: true
@@ -35,10 +39,10 @@ environments: [table]
 - QSS Tutorial 1: use conditions (e.g. `sex == "female"`) and logical operation (`TRUE` or `FALSE`; `&`, `|`, `!`) to subset a `data.frame` and calculate difference in means.
 - Introduce RMarkdown
 - Key Questions in This Week
-  - What is potential outcome?
-  - How can we use potential outcome to identify the causal effect of a specific policy (treatment)?
-  - Why can randomized experiment help us identify causal effect?
-  - How do we get the causal effect in a randomized experiment?
+  - [What is potential outcome?](#slide-potential-outcome)
+  - [How can we use potential outcome to identify the causal effect of a specific policy (treatment)?](#slide-SATE)
+  - [Why can randomized experiment help us identify causal effect?](#slide-randomize)
+  - [How do we get the causal effect in a randomized experiment?](#slide-neyman)
 
 # Introduction to RMarkdown
 
@@ -309,6 +313,7 @@ This is normal text
 - In 2022, RStudio (currently Posit) release [Quarto](https://quarto.org/).
   - An ambitious "next-gen" tool that aims to replace R Markdown and Jupyter Notebook.
   - The section slides are powered by Quarto and [Reveal.js](https://quarto.org/docs/presentations/revealjs/).
+  - To maintain consistency in this class, we will focus on RMarkdown.
 
 ## How to Use RMarkdown
 
@@ -337,7 +342,7 @@ This is normal text
 
 # Potential Outcome
 
-## Defining Causal Effects
+## Defining Causal Effects {#slide-potential-outcome}
 
 - Units: $i = 1, 2, \ldots, n$
 
@@ -386,10 +391,10 @@ $n$ & M & 43 & 1 & ??? & 1 &  \\ \hline
       - But sometimes we cannot manipulate *immutable characteristics*, such as sex, race, etc.
     - Model-based inference: we assume a model/theory in which $x$ causes $y$.
   - Two scenarios
-    - Experiment: researcher can control and know the assignment of treatment
-    - Observational studies: researcher cannot control and cannot exactly know the assignment of treatment
+    - Experiment: researcher can control and know the probability of treatment assignment
+    - Observational studies: researcher cannot control and cannot exactly know the probability of treatment assignment
 
-## Key Assumptions
+## Key Assumptions (skip; good to know)
 
 To identify $\tau_i$ as causal effect, we need to assume ...
 
@@ -407,12 +412,14 @@ Last two combined: **SUTVA** (stable unit-treatment variation assumption)
 
 [^2]: For detailed explanation on why we need this theoretical assumption, see [https://stats.stackexchange.com/questions/304799/in-causal-inference-in-statistics-how-do-you-interpret-the-consistency-assumpti](https://stats.stackexchange.com/questions/304799/in-causal-inference-in-statistics-how-do-you-interpret-the-consistency-assumpti).
 
-## Causal Estimands
+## Causal Estimands (only need to know SATE) {#slide-SATE}
 
 :::{.callout-note title="Statistical Jargons: Estimand, Estimator, and Estimate"}
+
 - **Estimand** (quantitle of interest/target of estimation): parameter in a population to be estimated in a statistical analysis.
 - **Estimator** (method of estimation): a rule, formula, or algorithm for calculating an estimate of a given quantity based on observed data under some reasonable assumptions.
 - **Estimate** (numerical result of estimation): a numerical value computed by an estimator.
+
 :::
 
 - **Sample Average Treatment Effect** (SATE): Average outcomes if everyone is treated vs. no one. For the most time in this class, we focus on SATE.
@@ -450,7 +457,7 @@ $$
 \text{CATE} = \mathbb{E}[Y_i(1) - Y_i(0) | X_i = x]
 $$
 
-- Non-additive Effects
+- Non-additive Effects (skip)
   - **Quantile Treatment Effect**
     - e.g. $\text{median}[Y_i(1)] - \text{median}[Y_i(0)]$
     - How does a policy shift a particular quantile of the outcome distribution?
@@ -466,7 +473,7 @@ $$
 
 # Randomized Experiment
 
-## Why Randomize Treatment Assignment?
+## Why Randomize Treatment Assignment? {#slide-randomize}
 
 QSS p.50:
 
@@ -479,19 +486,15 @@ $$
 T_i \perp \!\!\! \perp Y_i(0), Y_i(1)
 $$
 
-## Difference-in-Means (Neyman) Estimator
+## Difference-in-Means (Neyman) Estimator {#slide-neyman}
 
 $$
 \hat{\tau}^\text{dif} = \bar{Y}_t^\text{obs} - \bar{Y}_c^\text{obs} = \frac{1}{n_1} \sum_{i:T_i=1} Y_i^\text{obs} - \frac{1}{n_0} \sum_{i:T_i=0} Y_i^\text{obs}
 $$
 
----
-
-### Unbiasedness of $\hat{\tau}^\text{dif}$
-
 Under the assumption of consistency and unconfoundedness, we can prove that the difference-in-means estimator is an **unbiased** estimator for SATE. The term "unbiased" means the expected value of this difference-in-means estimator equals SATE, i.e., if we sample from population and calculate it multiple times, we will get the correct answer on average.
 
-**Proof**:
+**Proof** (skip; good to know):
 
 Because observed outcome is the realized potential outcome (consistency assumption), we can rewrite $\hat{\tau}^\text{dif}$ as
 
@@ -502,7 +505,7 @@ $$
 \end{aligned}
 $$
 
-Hence, the expectation of $\hat{\tau}^\text{dif}$ is[^3]
+Hence, under unconfoundedness, the expectation of $\hat{\tau}^\text{dif}$ is[^3]
 
 [^3]: Note that the only random part is the treatment, so we only need to take the expectation over $T_i$.
 
@@ -514,34 +517,7 @@ $$
 \end{aligned}
 $$
 
----
-
-### Uncertainty of $\hat{\tau}^\text{dif}$
-
-We can prove that the sampling variance of $\hat{\tau}^\text{dif}$ is
-$$
-\mathbb{V}_{T}\left(\bar{Y}_{\mathrm{t}}^{\mathrm{obs}}-\bar{Y}_{\mathrm{c}}^{\mathrm{obs}}\right)=\frac{S_{c}^{2}}{n_0}+\frac{S_{t}^{2}}{n_1}-\frac{S_{t c}^{2}}{n}
-$$
-where $S_c^2$ and $S_t^2$ are the variance of potential outcomes $Y_i(0)$ and $Y_i(1)$ in the sample, defined as:
-$$
-S_{c}^{2}=\frac{1}{n-1} \sum_{i=1}^{n}\left(Y_{i}(0)-\bar{Y}(0)\right)^{2}, \quad \text { and } \quad S_{t}^{2}=\frac{1}{n-1} \sum_{i=1}^{n}\left(Y_{i}(1)-\bar{Y}(1)\right)^{2}
-$$
-and $S_{tc}^2$ is the sample variance of the unit-level treatment effects, defined as:
-$$
-\begin{align}
-S_{t c}^{2} &=\frac{1}{n-1} \sum_{i=1}^{N}\left\{Y_{i}(1)-Y_{i}(0)-[\bar{Y}(1)-\bar{Y}(0)]\right\}^{2} \\
-&=\frac{1}{n-1} \sum_{i=1}^{N}\left(Y_{i}(1)-Y_{i}(0)-\tau_\text{SATE}\right)^{2}
-\end{align}
-$$
-which is unobservable. This term will diminish to zero when treatment effect is constant across unit. Because the term $S_{tc}^2$ is a non-negative value, we can drop this term and use the following estimator as a conservative upper bound for the sampling variance of $\hat{\tau}^\text{dif}$:
-
-$$
-\mathbb{V}_{T}\left(\bar{Y}_{\mathrm{t}}^{\mathrm{obs}}-\bar{Y}_{\mathrm{c}}^{\mathrm{obs}}\right) \leq \frac{S_{c}^{2}}{n_0}+\frac{S_{t}^{2}}{n_1}
-$$
-
-For detailed proof, see Imbens and Rubin (2015) Chapter 6.
-
-## (Fisher's) Permutation Inference
+## (Fisher's) Permutation Inference (skip)
 
 Alternatively, we can ask a question: "Is the observed difference between the treated and control group attributed to the treatment or by chance?"
 
@@ -557,7 +533,7 @@ If only a few of the random differences (like 5% or less) are as big or bigger t
 
 The proportion of random differences that are larger than the observed difference is also called $p$-value. We will encounter the concept of $p$-value again in this class later. But Fisher's use of $p$-value is different from the prevailing (Neyman's) approach, because they are based on different null hypothesis. Don't mess them up!
 
-## Neyman's Approach vs. Fisher's Approach
+## Neyman's Approach vs. Fisher's Approach (skip)
 
 - Fisher's approach does not have an assumption over the distribution of data.
 - Fisher's approach is based on a much stronger hypothesis that the treatment have zero effect on every unit (i.e. $H_0: Y_i(1) = Y_i(0)$), which is also called **Sharp Null Hypothesis**.
@@ -684,6 +660,8 @@ Original    |  90, 85, 88        |  80, 75, 78       |       10
 
 ## 1. Check Balance After Randomization
 
+Let's open the `.Rmd` file from Canvas! (review how to use `setwd()` or open `R` project)
+
 ```{r}
 
 transphobia <- read.csv("./data/transphobia.csv")
@@ -764,7 +742,7 @@ aggregate(
 
 ```
 
-## Fisher's Exact $p$-value Approach
+## Fisher's Exact $p$-value Approach (skip)
 
 ```{r}
 #| fig-height: 15

@@ -1264,18 +1264,12 @@ margin-right: 0; }
   <div class="reveal">
     <div class="slides">
 
-<section id="title-slide" class="quarto-title-block center">
+<section id="title-slide" class="center">
   <h1 class="title">CSSS/SOC/STAT 321: Lab 2</h1>
   <p class="subtitle">Potential Outcome &amp; Randomized Experiment</p>
-
-<div class="quarto-title-authors">
-<div class="quarto-title-author">
-<div class="quarto-title-author-name">
-Tao Lin 
-</div>
-</div>
-</div>
-
+  <p class="author">Tao Lin</p>
+  <p class="office_hours">Office Hours: Fri 1:30 - 3:30 PM Smith 35</p>
+  <p class="slides_url">Section Slides URL: <a href="https://github.com/soxv/CSSS-321-Labs">soxv/CSSS-321-Labs</a></p>
 </section>
 <section id="goals-in-week-2" class="slide level2">
 <h2>Goals in Week 2</h2>
@@ -1284,10 +1278,10 @@ Tao Lin
 <li>Introduce RMarkdown</li>
 <li>Key Questions in This Week
 <ul>
-<li>What is potential outcome?</li>
-<li>How can we use potential outcome to identify the causal effect of a specific policy (treatment)?</li>
-<li>Why can randomized experiment help us identify causal effect?</li>
-<li>How do we get the causal effect in a randomized experiment?</li>
+<li><a href="#/slide-potential-outcome">What is potential outcome?</a></li>
+<li><a href="#/slide-SATE">How can we use potential outcome to identify the causal effect of a specific policy (treatment)?</a></li>
+<li><a href="#/slide-randomize">Why can randomized experiment help us identify causal effect?</a></li>
+<li><a href="#/slide-neyman">How do we get the causal effect in a randomized experiment?</a></li>
 </ul></li>
 </ul>
 </section>
@@ -1509,6 +1503,7 @@ Tao Lin
 <ul>
 <li>An ambitious “next-gen” tool that aims to replace R Markdown and Jupyter Notebook.</li>
 <li>The section slides are powered by Quarto and <a href="https://quarto.org/docs/presentations/revealjs/">Reveal.js</a>.</li>
+<li>To maintain consistency in this class, we will focus on RMarkdown.</li>
 </ul></li>
 </ul>
 </section>
@@ -1572,7 +1567,7 @@ Tao Lin
 </ul>
 </div>
 </section>
-<section id="defining-causal-effects" class="slide level2">
+<section id="slide-potential-outcome" class="slide level2">
 <h2>Defining Causal Effects</h2>
 <ul>
 <li><p>Units: <span class="math inline">i = 1, 2, \ldots, n</span></p></li>
@@ -1682,14 +1677,14 @@ T_i = \begin{cases}
 </ul></li>
 <li>Two scenarios
 <ul>
-<li>Experiment: researcher can control and know the assignment of treatment</li>
-<li>Observational studies: researcher cannot control and cannot exactly know the assignment of treatment</li>
+<li>Experiment: researcher can control and know the probability of treatment assignment</li>
+<li>Observational studies: researcher cannot control and cannot exactly know the probability of treatment assignment</li>
 </ul></li>
 </ul></li>
 </ul>
 </section>
-<section id="key-assumptions" class="slide level2">
-<h2>Key Assumptions</h2>
+<section id="key-assumptions-skip-good-to-know" class="slide level2">
+<h2>Key Assumptions (skip; good to know)</h2>
 <p>To identify <span class="math inline">\tau_i</span> as causal effect, we need to assume …</p>
 <ol type="1">
 <li><strong>Causal ordering</strong>: <span class="math inline">T_i \rightarrow Y_i</span></li>
@@ -1712,8 +1707,8 @@ T_i = \begin{cases}
 </ul>
 <p>Last two combined: <strong>SUTVA</strong> (stable unit-treatment variation assumption)</p>
 <aside></aside></section>
-<section id="causal-estimands" class="slide level2">
-<h2>Causal Estimands</h2>
+<section id="slide-SATE" class="slide level2">
+<h2>Causal Estimands (only need to know SATE)</h2>
 <div class="callout callout-note callout-captioned callout-style-default">
 <div class="callout-body">
 <div class="callout-caption">
@@ -1774,7 +1769,7 @@ T_i = \begin{cases}
 \text{CATE} = \mathbb{E}[Y_i(1) - Y_i(0) | X_i = x]
 </span></p>
 <ul>
-<li>Non-additive Effects
+<li>Non-additive Effects (skip)
 <ul>
 <li><strong>Quantile Treatment Effect</strong>
 <ul>
@@ -1817,7 +1812,7 @@ T_i = \begin{cases}
 </ul>
 </div>
 </section>
-<section id="why-randomize-treatment-assignment" class="slide level2">
+<section id="slide-randomize" class="slide level2">
 <h2>Why Randomize Treatment Assignment?</h2>
 <p>QSS p.50:</p>
 <blockquote>
@@ -1831,17 +1826,13 @@ T_i = \begin{cases}
 T_i \perp \!\!\! \perp Y_i(0), Y_i(1)
 </span></p>
 </section>
-<section id="difference-in-means-neyman-estimator" class="slide level2">
+<section id="slide-neyman" class="slide level2">
 <h2>Difference-in-Means (Neyman) Estimator</h2>
 <p><span class="math display">
 \hat{\tau}^\text{dif} = \bar{Y}_t^\text{obs} - \bar{Y}_c^\text{obs} = \frac{1}{n_1} \sum_{i:T_i=1} Y_i^\text{obs} - \frac{1}{n_0} \sum_{i:T_i=0} Y_i^\text{obs}
 </span></p>
-</section>
-<section class="slide level2">
-
-<h3 id="unbiasedness-of-hattautextdif">Unbiasedness of <span class="math inline">\hat{\tau}^\text{dif}</span></h3>
 <p>Under the assumption of consistency and unconfoundedness, we can prove that the difference-in-means estimator is an <strong>unbiased</strong> estimator for SATE. The term “unbiased” means the expected value of this difference-in-means estimator equals SATE, i.e., if we sample from population and calculate it multiple times, we will get the correct answer on average.</p>
-<p><strong>Proof</strong>:</p>
+<p><strong>Proof</strong> (skip; good to know):</p>
 <p>Because observed outcome is the realized potential outcome (consistency assumption), we can rewrite <span class="math inline">\hat{\tau}^\text{dif}</span> as</p>
 <p><span class="math display">
 \begin{aligned}
@@ -1849,7 +1840,7 @@ T_i \perp \!\!\! \perp Y_i(0), Y_i(1)
 =&amp; \frac{1}{n} \sum_{i=1}^{n}\left(\frac{T_{i} \cdot Y_{i}(1)}{n_1 / n}-\frac{\left(1-T_{i}\right) \cdot Y_{i}(0)}{n_0 / n}\right)
 \end{aligned}
 </span></p>
-<p>Hence, the expectation of <span class="math inline">\hat{\tau}^\text{dif}</span> is<a href="#/footnotes" class="footnote-ref" id="fnref4" role="doc-noteref" data-footnote-href="#/fn4" onclick><sup>4</sup></a></p>
+<p>Hence, under unconfoundedness, the expectation of <span class="math inline">\hat{\tau}^\text{dif}</span> is<a href="#/footnotes" class="footnote-ref" id="fnref4" role="doc-noteref" data-footnote-href="#/fn4" onclick><sup>4</sup></a></p>
 <p><span class="math display">
 \begin{aligned}
 \mathbb{E}_{T}\left[\hat{\tau}^{\mathrm{dif}} \mid \mathbf{Y}(0), \mathbf{Y}(1)\right] &amp;=\frac{1}{n} \sum_{i=1}^{n}\left(\frac{\mathbb{E}_{T}\left[T_{i}\right] \cdot Y_{i}(1)}{n_1 / n}-\frac{\mathbb{E}_{T}\left[1-T_{i}\right] \cdot Y_{i}(0)}{n_0 / n}\right) \\
@@ -1858,26 +1849,8 @@ T_i \perp \!\!\! \perp Y_i(0), Y_i(1)
 \end{aligned}
 </span></p>
 <aside></aside></section>
-<section class="slide level2">
-
-<h3 id="uncertainty-of-hattautextdif">Uncertainty of <span class="math inline">\hat{\tau}^\text{dif}</span></h3>
-<p>We can prove that the sampling variance of <span class="math inline">\hat{\tau}^\text{dif}</span> is <span class="math display">
-\mathbb{V}_{T}\left(\bar{Y}_{\mathrm{t}}^{\mathrm{obs}}-\bar{Y}_{\mathrm{c}}^{\mathrm{obs}}\right)=\frac{S_{c}^{2}}{n_0}+\frac{S_{t}^{2}}{n_1}-\frac{S_{t c}^{2}}{n}
-</span> where <span class="math inline">S_c^2</span> and <span class="math inline">S_t^2</span> are the variance of potential outcomes <span class="math inline">Y_i(0)</span> and <span class="math inline">Y_i(1)</span> in the sample, defined as: <span class="math display">
-S_{c}^{2}=\frac{1}{n-1} \sum_{i=1}^{n}\left(Y_{i}(0)-\bar{Y}(0)\right)^{2}, \quad \text { and } \quad S_{t}^{2}=\frac{1}{n-1} \sum_{i=1}^{n}\left(Y_{i}(1)-\bar{Y}(1)\right)^{2}
-</span> and <span class="math inline">S_{tc}^2</span> is the sample variance of the unit-level treatment effects, defined as: <span class="math display">
-\begin{align}
-S_{t c}^{2} &amp;=\frac{1}{n-1} \sum_{i=1}^{N}\left\{Y_{i}(1)-Y_{i}(0)-[\bar{Y}(1)-\bar{Y}(0)]\right\}^{2} \\
-&amp;=\frac{1}{n-1} \sum_{i=1}^{N}\left(Y_{i}(1)-Y_{i}(0)-\tau_\text{SATE}\right)^{2}
-\end{align}
-</span> which is unobservable. This term will diminish to zero when treatment effect is constant across unit. Because the term <span class="math inline">S_{tc}^2</span> is a non-negative value, we can drop this term and use the following estimator as a conservative upper bound for the sampling variance of <span class="math inline">\hat{\tau}^\text{dif}</span>:</p>
-<p><span class="math display">
-\mathbb{V}_{T}\left(\bar{Y}_{\mathrm{t}}^{\mathrm{obs}}-\bar{Y}_{\mathrm{c}}^{\mathrm{obs}}\right) \leq \frac{S_{c}^{2}}{n_0}+\frac{S_{t}^{2}}{n_1}
-</span></p>
-<p>For detailed proof, see Imbens and Rubin (2015) Chapter 6.</p>
-</section>
-<section id="fishers-permutation-inference" class="slide level2">
-<h2>(Fisher’s) Permutation Inference</h2>
+<section id="fishers-permutation-inference-skip" class="slide level2">
+<h2>(Fisher’s) Permutation Inference (skip)</h2>
 <p>Alternatively, we can ask a question: “Is the observed difference between the treated and control group attributed to the treatment or by chance?”</p>
 <p>Imagine you have two groups of students, Group A and Group B. Both groups took a test, and now you want to know if one group did better because of a special study technique (e.g. using ChatGPT), or if it was just by chance. We can conduct a permutation test in the following steps:</p>
 <ol type="1">
@@ -1890,8 +1863,8 @@ S_{t c}^{2} &amp;=\frac{1}{n-1} \sum_{i=1}^{N}\left\{Y_{i}(1)-Y_{i}(0)-[\bar{Y}(
 <p>If only a few of the random differences (like 5% or less) are as big or bigger than the observed difference, we say that the difference between the original groups is significant, and it’s likely not due to chance.</p>
 <p>The proportion of random differences that are larger than the observed difference is also called <span class="math inline">p</span>-value. We will encounter the concept of <span class="math inline">p</span>-value again in this class later. But Fisher’s use of <span class="math inline">p</span>-value is different from the prevailing (Neyman’s) approach, because they are based on different null hypothesis. Don’t mess them up!</p>
 </section>
-<section id="neymans-approach-vs.-fishers-approach" class="slide level2">
-<h2>Neyman’s Approach vs. Fisher’s Approach</h2>
+<section id="neymans-approach-vs.-fishers-approach-skip" class="slide level2">
+<h2>Neyman’s Approach vs. Fisher’s Approach (skip)</h2>
 <ul>
 <li>Fisher’s approach does not have an assumption over the distribution of data.</li>
 <li>Fisher’s approach is based on a much stronger hypothesis that the treatment have zero effect on every unit (i.e. <span class="math inline">H_0: Y_i(1) = Y_i(0)</span>), which is also called <strong>Sharp Null Hypothesis</strong>.
@@ -2286,6 +2259,7 @@ S_{t c}^{2} &amp;=\frac{1}{n-1} \sum_{i=1}^{N}\left\{Y_{i}(1)-Y_{i}(0)-[\bar{Y}(
 </section>
 <section id="check-balance-after-randomization" class="slide level2">
 <h2>1. Check Balance After Randomization</h2>
+<p>Let’s open the <code>.Rmd</code> file from Canvas! (review how to use <code>setwd()</code> or open <code>R</code> project)</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1"></a>transphobia <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;./data/transphobia.csv&quot;</span>)</span>
 <span id="cb1-2"><a href="#cb1-2"></a></span>
@@ -2407,8 +2381,8 @@ African American            Asian        Caucasian         Hispanic
 </div>
 </div>
 </section>
-<section id="fishers-exact-p-value-approach" class="slide level2">
-<h2>Fisher’s Exact <span class="math inline">p</span>-value Approach</h2>
+<section id="fishers-exact-p-value-approach-skip" class="slide level2">
+<h2>Fisher’s Exact <span class="math inline">p</span>-value Approach (skip)</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1"></a><span class="co"># 1. calculate observed difference in means</span></span>
 <span id="cb24-2"><a href="#cb24-2"></a>obs_dif <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(</span>
