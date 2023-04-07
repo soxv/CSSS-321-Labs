@@ -42,7 +42,7 @@ environments: [table]
   - [What is potential outcome?](#slide-potential-outcome)
   - [How can we use potential outcome to identify the causal effect of a specific policy (treatment)?](#slide-SATE)
   - [Why can randomized experiment help us identify causal effect?](#slide-randomize)
-  - [How do we get the causal effect in a randomized experiment?](#slide-neyman)
+  - [How do we calculate the causal effect in a randomized experiment?](#slide-neyman)
 
 # Introduction to RMarkdown
 
@@ -394,7 +394,7 @@ $n$ & M & 43 & 1 & ??? & 1 &  \\ \hline
     - Experiment: researcher can control and know the probability of treatment assignment
     - Observational studies: researcher cannot control and cannot exactly know the probability of treatment assignment
 
-## Key Assumptions (skip; good to know)
+## Key Assumptions (not required; good to know if you are interested)
 
 To identify $\tau_i$ as causal effect, we need to assume ...
 
@@ -414,7 +414,7 @@ Last two combined: **SUTVA** (stable unit-treatment variation assumption)
 
 ## Causal Estimands (only need to know SATE) {#slide-SATE}
 
-:::{.callout-note title="Statistical Jargons: Estimand, Estimator, and Estimate"}
+:::{.callout-note title="Statistical Concepts: Estimand, Estimator, and Estimate"}
 
 - **Estimand** (quantitle of interest/target of estimation): parameter in a population to be estimated in a statistical analysis.
 - **Estimator** (method of estimation): a rule, formula, or algorithm for calculating an estimate of a given quantity based on observed data under some reasonable assumptions.
@@ -457,7 +457,7 @@ $$
 \text{CATE} = \mathbb{E}[Y_i(1) - Y_i(0) | X_i = x]
 $$
 
-- Non-additive Effects (skip)
+- Non-additive Effects (not required)
   - **Quantile Treatment Effect**
     - e.g. $\text{median}[Y_i(1)] - \text{median}[Y_i(0)]$
     - How does a policy shift a particular quantile of the outcome distribution?
@@ -494,7 +494,7 @@ $$
 
 Under the assumption of consistency and unconfoundedness, we can prove that the difference-in-means estimator is an **unbiased** estimator for SATE. The term "unbiased" means the expected value of this difference-in-means estimator equals SATE, i.e., if we sample from population and calculate it multiple times, we will get the correct answer on average.
 
-**Proof** (skip; good to know):
+**Proof** (not required; good to know if you are interested):
 
 Because observed outcome is the realized potential outcome (consistency assumption), we can rewrite $\hat{\tau}^\text{dif}$ as
 
@@ -517,7 +517,7 @@ $$
 \end{aligned}
 $$
 
-## (Fisher's) Permutation Inference (skip)
+## (Fisher's) Permutation Inference (not required)
 
 Alternatively, we can ask a question: "Is the observed difference between the treated and control group attributed to the treatment or by chance?"
 
@@ -533,7 +533,7 @@ If only a few of the random differences (like 5% or less) are as big or bigger t
 
 The proportion of random differences that are larger than the observed difference is also called $p$-value. We will encounter the concept of $p$-value again in this class later. But Fisher's use of $p$-value is different from the prevailing (Neyman's) approach, because they are based on different null hypothesis. Don't mess them up!
 
-## Neyman's Approach vs. Fisher's Approach (skip)
+## Neyman's Approach vs. Fisher's Approach (not required)
 
 - Fisher's approach does not have an assumption over the distribution of data.
 - Fisher's approach is based on a much stronger hypothesis that the treatment have zero effect on every unit (i.e. $H_0: Y_i(1) = Y_i(0)$), which is also called **Sharp Null Hypothesis**.
@@ -658,9 +658,12 @@ Original    |  90, 85, 88        |  80, 75, 78       |       10
 
 ---
 
-## 1. Check Balance After Randomization
+## 1. Check Covariate Balance After Randomization
 
-Let's open the `.Rmd` file from Canvas! (review how to use `setwd()` or open `R` project)
+- Let's take 5 minutes to open the `.Rmd` file from Canvas!
+- Review how to set working directory or open `R` project to find the target folder.
+- Try to load the dataset `transphobia.csv` in the `.Rmd` file.
+- Try to generate a PDF from the `.Rmd` file.
 
 ```{r}
 
@@ -672,9 +675,8 @@ tapply(transphobia$age, transphobia$treat_ind, mean) # check balance for a singl
 
 aggregate(
   cbind(age, female, democrat, voted_gen_14, voted_gen_12) ~ treat_ind,
-  data = transphobia,
-  FUN = mean
-) # check balance for multiple continuous variables
+  data = transphobia, FUN = mean
+) # check balance for multiple continuous pre-treatment variables (not required; good to know if you are interested)
 
 tapply(transphobia$treat_ind, transphobia$racename, mean) # check balance for a single categorical variable; note that we cannot calculate the mean of a categorical variable with more than 3 categories
 
@@ -694,20 +696,16 @@ mean(treated$therm_trans_t0) - mean(control$therm_trans_t0)
 
 # method 2: a more compact way ...
 # take the baseline outcome as an example
-tapply(transphobia$therm_trans_t0, transphobia$treat_ind, mean) |> # use tapply() to calculate the means of each group
-  rev() |> # reverse the order from 0 1 to 1 0
-  diff() # calculate the difference in means
+group_means <- tapply(transphobia$therm_trans_t0, transphobia$treat_ind, mean) # use tapply() to calculate the means of each group
+diff(group_means) # calculate the difference in means
 
-# a more compact way to calculate difference in means for baseline outcome and later periods
-library(tidyverse) # load the package tidyverse so that we can use the pipe operator `%>%`
-aggregate(
+# method 3 (not required; good to know if you are interested): a more compact way to calculate difference in means for baseline outcome and later periods
+group_means <- aggregate(
   cbind(therm_trans_t0, therm_trans_t1, therm_trans_t2) ~ treat_ind,
   data = transphobia,
   FUN = mean
-) %>% # create a matrix that shows group means
-  rbind(., apply(., MARGIN = 2, diff)) # use apply() to calculate differences in each column;
-                                       # and use rbind() to concatenate the row of differences to previous matrix that shows group means;
-                                       # dot "." means the object generated from previous code.
+) # create a matrix that shows group means
+apply(group_means, MARGIN = 2, diff) # use apply() to calculate differences in each column
 
 ```
 
@@ -719,41 +717,40 @@ aggregate(
 # take the baseline outcome as an example
 treated_female <- subset(transphobia, treat_ind == 1 & female == 1)
 control_female <- subset(transphobia, treat_ind == 0 & female == 1)
-mean(treated_female$therm_trans_t0) - mean(control_female$therm_trans_t0)
+mean(treated_female$therm_trans_t0) - mean(control_female$therm_trans_t0) # ATE for female
 
 treated_male <- subset(transphobia, treat_ind == 1 & female == 0)
 control_male <- subset(transphobia, treat_ind == 0 & female == 0)
-mean(treated_male$therm_trans_t0) - mean(control_male$therm_trans_t0)
+mean(treated_male$therm_trans_t0) - mean(control_male$therm_trans_t0) # ATE for male
 
-# method 2: a more compact way to calculate CATE for baseline outcome and later periods
-aggregate(
+# method 2: using tapply() and diff() for each gender group so that we only need to subset twice
+female <- subset(transphobia, female == 1)
+tapply(female$therm_trans_t0, female$treat_ind, mean) |> diff()
+male <- subset(transphobia, female == 0)
+tapply(male$therm_trans_t0, male$treat_ind, mean) |> diff()
+
+# method 3 (not required; good to know if you are interested): a more compact way to calculate Conditional ATE for baseline outcome and later periods
+group_means <- aggregate(
   cbind(therm_trans_t0, therm_trans_t1, therm_trans_t2) ~ treat_ind + female,
   data = transphobia,
   FUN = mean
-) %>%
-  rbind( # use rbind() to concatenate difference in means to the previous matrix showing group means
-    ., apply(., MARGIN = 2, function(x) {
-      c(
-        diff(x[1:2]), # calculate difference in means between the first two rows (i.e. treated and control within male group)
-        diff(x[3:4]) # calculate difference in means between the last two rows (i.e. treated and control within female group)
-      )
-    })
-  )
+)
+apply(group_means, MARGIN = 2, function(x) { diff(x[1:2]) }) # calculate difference in means between the first two rows (i.e. treated and control within male group)
+apply(group_means, MARGIN = 2, function(x) { diff(x[3:4]) }) # calculate difference in means between the last two rows (i.e. treated and control within female group)
 
 ```
 
-## Fisher's Exact $p$-value Approach (skip)
+## Fisher's Exact $p$-value Approach (not required)
 
 ```{r}
 #| fig-height: 15
 
 # 1. calculate observed difference in means
-obs_dif <- aggregate(
+obs_group_means <- aggregate(
   cbind(therm_trans_t0, therm_trans_t1, therm_trans_t2) ~ treat_ind,
   data = transphobia, FUN = mean
-) %>%
-  apply(., MARGIN = 2, diff) %>%
-  .[-1] # we want to drop the first element, which is useless in our analysis
+)
+obs_dif <- apply(obs_group_means, MARGIN = 2, diff)[-1] # we want to drop the first element, which is useless in our analysis
 
 # 2. mix up and randomly split people into two groups for many times
 n <- nrow(transphobia) # total number of people in the data
@@ -763,12 +760,11 @@ set.seed(98105) # set a fixed random seed to make your randomization reproducibl
 for (i in 1:1000) {
   rand_ids <- sample(transphobia$id, size = 0.5 * n, replace = FALSE) # randomly sample half of IDs; we set `replace = FALSE` because we want sampling without replacement.
   transphobia$fake_treat <- ifelse(transphobia$id %in% rand_ids, 1, 0) # sampled IDs will be assigned to a fake treated group
-  rand_dif[i, ] <- aggregate( # calculate difference in means between randomly split groups
+  rand_group_means <- aggregate( # calculate difference in means between randomly split groups
     cbind(therm_trans_t0, therm_trans_t1, therm_trans_t2) ~ fake_treat,
     data = transphobia, FUN = mean
-  ) %>%
-    apply(., MARGIN = 2, diff) %>%
-    .[-1]
+  )
+  rand_dif[i, ] <- apply(rand_group_means, MARGIN = 2, diff)[-1]
 }
 
 # 3. calculate the proportion of random differences that are greater than the observed difference
