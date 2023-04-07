@@ -656,14 +656,15 @@ Original    |  90, 85, 88        |  80, 75, 78       |       10
 | `therm_trans_t1` | 0-100 feeling thermometer about transgender people 3 days after treatment |
 | `therm_trans_t2` | 0-100 feeling thermometer about transgender people 3 weeks after treatment |
 
+Let's take 5-10 minutes to do the following jobs:
+1. Download and open the `.Rmd` file from Canvas.
+2. Download `transphobia.csv` from Canvas to your computer; review how to set working directory or open `R` project to find the target folder that contains the dataset.
+3. Try to load the dataset `transphobia.csv` in the `.Rmd` file.
+4. Try to generate a PDF from the `.Rmd` file.
+
 ---
 
 ## 1. Check Covariate Balance After Randomization
-
-- Let's take 5 minutes to open the `.Rmd` file from Canvas!
-- Review how to set working directory or open `R` project to find the target folder.
-- Try to load the dataset `transphobia.csv` in the `.Rmd` file.
-- Try to generate a PDF from the `.Rmd` file.
 
 ```{r}
 
