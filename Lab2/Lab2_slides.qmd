@@ -43,6 +43,7 @@ environments: [table]
   - [How can we use potential outcome to identify the causal effect of a specific policy (treatment)?](#slide-SATE)
   - [Why can randomized experiment help us identify causal effect?](#slide-randomize)
   - [How do we calculate the causal effect in a randomized experiment?](#slide-neyman)
+- In-class `R` Programming: use `subset()` or `tapply()` to calculate group means and then compute difference in means.
 
 # Introduction to RMarkdown
 
@@ -657,6 +658,7 @@ Original    |  90, 85, 88        |  80, 75, 78       |       10
 | `therm_trans_t2` | 0-100 feeling thermometer about transgender people 3 weeks after treatment |
 
 Let's take 5-10 minutes to do the following jobs:
+
 1. Download and open the `.Rmd` file from Canvas.
 2. Download `transphobia.csv` from Canvas to your computer; review how to set working directory or open `R` project to find the target folder that contains the dataset.
 3. Try to load the dataset `transphobia.csv` in the `.Rmd` file.

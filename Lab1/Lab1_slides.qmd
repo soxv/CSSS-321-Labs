@@ -88,6 +88,38 @@ auto-agenda:
 - "reproducible": provide code that someone else could run
 - Use [`reprex`](https://reprex.tidyverse.org/) and [`datapasta`](https://milesmcbain.github.io/datapasta/) to generate MRE! (see [https://www.rstudio.com/resources/webinars/help-me-help-you-creating-reproducible-examples/](https://www.rstudio.com/resources/webinars/help-me-help-you-creating-reproducible-examples/))
 
+---
+
+## General Tips for Learning Programming Language
+
+Treat the programming language as your second language.
+
+- Most of your assignments require you to translate human language to programming language
+- But output is more difficult than input for beginners.
+- A more beginner-friendly exercise is to translate programming language to human language.
+  - You can use `help()` or `?` to check the "dictionary" (helper documentation) of functions.
+- Write a well-commented code (i.e. write down your translation of code); Name your variables meaningfully and [consistently](https://curc.readthedocs.io/en/latest/programming/coding-best-practices.html)
+  - [The tidyverse style guide](https://style.tidyverse.org/)
+- Fortunately, for those of you new to R, there are many resources to get you up to speed
+  - Books: e.g. [Cowpertwait and Metcalfe (2009)](https://canvas.uw.edu/courses/1545365/files?preview=90198835), [Zuur et al. (2009)](https://canvas.uw.edu/courses/1545365/files?preview=90198814), [Wickham and Groleman (2017)](http://r4ds.had.co.nz/), etc.
+  - Online Courses: e.g. [CSSS 508 Introduction to R for Social Scientists](https://clanfear.github.io/CSSS508/)
+  - Interactive Tutorial within R: [`install.package(swirl)`](https://swirlstats.com/)
+  - Interactive Tutorials Online: e.g. [DataCamp](https://app.datacamp.com/learn/skill-tracks/r-programming), [Codecademy](https://www.codecademy.com/courses/learn-r/lessons/introduction-to-r/exercises/why-r), etc.
+
+---
+
+## Potential Data Source for Your Final Project
+
+- Awesome lists of public datasets in GitHub
+  - [Awesome Public Datasets](https://github.com/awesomedata/awesome-public-datasets)
+  - [Awesome collections on DataHub](https://github.com/datasets/awesome-data)
+  - Just search "dataset" in GitHub!
+- Comparative politics/world politics
+  - Government: [World Economis and Politics (WEP)](https://ncgg.princeton.edu/wep/dataverse.html), [Quality of Government (QoG)](https://www.gu.se/en/quality-government/qog-data/data-downloads), [Variety of Democracy (V-Dem)](https://www.v-dem.net/), etc.
+  - Survey: [World Value Survey (WVS)](https://www.worldvaluessurvey.org/wvs.jsp); [(Asian/Afro/Latino/...)Barometor Survey](https://www.globalbarometer.net/), etc.
+
+---
+
 ## Introduce Yourself!
 
 - What is your major / year?

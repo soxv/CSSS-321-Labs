@@ -1,0 +1,234 @@
+---
+title: "CSSS/SOC/STAT 321: Lab 3"
+subtitle: "Observational Studies & Descriptive Statistics"
+author: "Tao Lin"
+office_hours: "Office Hours: Fri 1:30 - 3:30 PM Smith 35"
+slides_url: "Section Slides URL: [soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs)"
+format: 
+  revealjs:
+    template-partials:
+      - title-slide.html
+    smaller: true
+    scrollable: true
+    self-contained: true
+    slide-number: true
+    reference-location: "document"
+    link-external-icon: true
+    link-external-newwindow: true
+    footnotes-hover: true
+    html-math-method: katex
+    footer: "CSSS/SOC/STAT 321 Data Science and Statistics for Social Scicence I"
+    logo: "https://csss.uw.edu/assets/csss-logo.png"
+execute: 
+  echo: true
+  #eval: false
+  warning: false
+  message: false
+filters:
+  - reveal-auto-agenda
+  - designmode
+auto-agenda:
+  bullets: bullets
+  heading: Agenda
+---
+
+## Goals in Week 3
+
+- QSS Tutorial 2: use conditions (e.g. `sex == "female"`) and logical operation (`TRUE` or `FALSE`; `&`, `|`, `!`) to subset a `data.frame` and calculate difference in means; play with factor variables.
+- Key Questions in Week 3
+  - What are the pros and cons of experimental and observational studies, in terms of **internal** and **external validity**?
+  - What is confounders and what is confounding bias? How can we deal with it?
+  - Why do we use difference-in-difference design in observational studies? What is the underlying assumption?
+  - How can we describe the distribution of data?
+- Deciphering Problem Set 1
+
+
+# Deciphering Problem Set 1
+
+---
+
+As usual, please do the following jobs for 5 minutes:
+
+- Download the PDF, `.Rmd`, and `boston.csv` of Problem Set 1 from Canvas to a folder.
+- Load the `boston.csv` dataset in `321 - problem set 1.Rmd`.
+  - Option 1: `dat <- read.csv("path/to/dataset")`
+    - Note that for RMarkdown, the file will automatically detect which folder it is contained. If your dataset is included within the same folder as `.Rmd` file, you can simply do `dat <- read.csv("boston.csv")`.
+  - Option 2: `setwd("path/to/target/folder")`, then `dat <- read.csv("path/to/dataset")`
+  - Option 3: Open the target folder as an `R` project.
+- Generate/knit a PDF from `321 - problem set 1.Rmd`.
+
+---
+
+Read the long introduction in Page 1, and transform it to bullet points by asking the following questions:
+
+- Is this study a randomized experiment or observational studies?
+- What is the outcome variable ($Y$) in this study? How is it measured?
+- What is the explanatory variable (or treatment $T$) in this study? How is it measured?
+- What kind of other covariates (i.e. variables other than treatment and outcome, $X$) are associated with the outcome variable?
+- How do we calculate the causal effect in this study?
+
+```{r}
+#| echo: false
+
+library(dagitty)
+library(ggdag)
+
+dag <- dagitty('dag {
+    X -> T
+    T -> Y
+    X -> Y
+}')
+
+ggdag(dag, layout = "circle") + theme_dag()
+
+```
+
+---
+
+## Question 1
+
+The goal of question 1 is to check "covariate balance." We can breakdown the prompt into steps:
+
+1. Compare the **distribution** of `income` between treated and control groups (hint: choose the appropriate statistics that can describe the distribution).
+2. Compare the proportion of `male` between treated and control groups.
+3. Interpret these two numbers.
+
+---
+
+There are many ways to describe the distribution of data (See lecture slides):
+
+- Central tendency: mean and median, etc.
+- Spread: range, quantile, standard deviation, variance, etc.
+- Z-score: compare data on a common scale.
+
+```{r}
+#| echo: false
+
+library(tidyverse)
+
+boston <- read.csv("./data/boston.csv")
+
+ggplot(aes(x = income, group = as.factor(treatment), fill = as.factor(treatment)), data = boston) +
+  geom_histogram(position = "dodge")
+
+```
+
+---
+
+## Question 2
+
+Compute the average treatment effect on the change in attitudes about immigration:
+
+1. Calculate the change in attitudes about immigration for each individual.
+2. Calculate the mean of change between treated and control groups.
+3. Calculate the difference in means.
+4. Interpret the result.
+
+---
+
+- The experimental design in Problem Set 1 is a pretest-posttest control design. Researchers measure the outcome variable before and after intervention for both treated and control groups.
+  - Pretest-posttest control group design in experimental studies: randomization guarantees the equivalence between two groups.
+  - Difference-in-difference design in observational studies: cannot guarantee group equivalence.
+
+```{r}
+#| echo: false
+
+tribble(
+  ~ period, ~ value, ~ group, ~ study, ~ status,
+  "Pre", 0, "Control", "Pretest-Posttest Randomized Experiment", "Observed",
+  "Post", 0.5, "Control", "Pretest-Posttest Randomized Experiment", "Observed",
+  "Pre", 0, "Treated", "Pretest-Posttest Randomized Experiment", "Observed",
+  "Post", 1, "Treated", "Pretest-Posttest Randomized Experiment", "Observed",
+  "Pre", 0, "Control", "DiD in Observational Studies", "Observed",
+  "Post", 0.5, "Control", "DiD in Observational Studies", "Observed",
+  "Pre", 0.5, "Treated", "DiD in Observational Studies", "Observed",
+  "Post", 1.5, "Treated", "DiD in Observational Studies", "Observed",
+  "Pre", 0.5, "Treated", "DiD in Observational Studies", "Potential",
+  "Post", 1, "Treated", "DiD in Observational Studies", "Potential",
+) %>%
+  mutate(
+    period = factor(period, levels = c("Pre", "Post")),
+    group = factor(group, levels = c("Treated", "Control")),
+  ) %>%
+  ggplot(aes(x = period, y = value, group = interaction(group, status))) +
+    geom_line(aes(color = group, linetype = status)) +
+    facet_wrap(~ study) +
+    scale_linetype_discrete(guide = FALSE) +
+    labs(x = "", y = "") +
+    ylim(c(-0.5, 1.5)) +
+    theme_classic() +
+    theme(legend.position = "bottom")
+
+```
+
+---
+
+|   | Pre | Post |
+|:---:|:---:|:---:|
+|Treated| $Y_{\text{treat},i}^\text{pre}$  |  $Y_{\text{treat},i}^\text{post}$ |
+|Control| $Y_{\text{control},i}^\text{pre}$ | $Y_{\text{control},i}^\text{post}$ |
+
+:::{.columns}
+
+::: {.column width="45%"}
+
+$$
+\begin{aligned}
+& ( \bar{Y}_\text{treat}^\text{post} - \bar{Y}_\text{treat}^\text{pre} ) - ( \bar{Y}_\text{control}^\text{post} - \bar{Y}_\text{control}^\text{pre} ) \\
+=& \left( \frac{1}{n_1} \sum_{i:\text{treat}}^{n_1} Y_i^\text{post} - \frac{1}{n_1} \sum_{i:\text{treat}}^{n_1} Y_i^\text{pre} \right) \\
+& - \left( \frac{1}{n_0} \sum_{i:\text{control}}^{n_0} Y_i^\text{post} - \frac{1}{n_0} \sum_{i:\text{control}}^{n_0} Y_i^\text{pre} \right)
+\end{aligned}
+$$
+
+:::
+
+::: {.column width="45%"}
+
+(This is what Question 2 wants us to do! 👇)
+
+$$
+\begin{aligned}
+& \overline{Y_{\text{treat}, i}^\text{post} - Y_{\text{treat}, i}^\text{pre}} - \overline{Y_{\text{control}, i}^\text{post} - Y_{\text{control}, i}^\text{pre}} \\
+=& \frac{1}{n_1} \sum_{i:\text{treat}}^{n_1} (Y_i^\text{post} - Y_i^\text{pre}) - \frac{1}{n_0} \sum_{i:\text{control}}^{n_0} (Y_i^\text{post} - Y_i^\text{pre})
+\end{aligned}
+$$
+
+:::
+
+:::
+
+The two estimators are equivalent only when there is no dropout (subjects retreat from the study), or dropout does not influence the equivalence of treated and control groups.
+
+If there is a significant share of dropouts in the experimental study, then:
+
+- The second estimator will drop those observations with missing values and only focus on "complete cases", which loses some information and induce potential bias if the data is not missing completely at random (MCAR), that is, dropout is not related to any observable and unobservable characteristics.
+- The first DiD estimator still cannot avoid bias. But it is more flexible because it can be used in both longitudinal data and repeated cross sections.
+  - longitudinal data: repeatedly measure outcomes for the same sample at different points in time.
+  - repeated cross-sections: measure outcomes for different, independent samples drawn from the same population at different points in time.
+    - We cannot do one-on-one pre-post subtraction, but we assume that the two snapshots should be identical on average.
+
+---
+
+![Source: <https://development.asia/explainer/measuring-social-mobility-longitudinal-data-scarce-settings>](./img/data_structure.jpeg)
+
+---
+
+## Question 3
+
+Compare the ATE on the change in attitudes about immigration between people who attended college and who did not.
+
+1. Subset the dataset into two groups based on the covariate `college`.
+2. For each group, do the same as Question 2.
+3. Interpret the result.
+
+## Question 4
+
+Compare the ATE on the change in attitudes between different age groups and ideology groups.
+
+1. Subset the dataset into four quartile groups based on the covariate `age`. (Hint: use `quantile()`)
+2. For each `age` quartile group, repeat the same procedure as in Question 2.
+3. Subset `ideology` to each value, and repeat the same procedure for each `ideology` group as in Question 2.
+4. Interpret the pattern of ATEs across the 4 quartile groups.
+
+
+
