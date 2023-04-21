@@ -1,0 +1,294 @@
+---
+title: "CSSS/SOC/STAT 321: Lab 4"
+subtitle: "Descriptive Statistics"
+author: "Tao Lin"
+office_hours: "Office Hours: Fri 1:30 - 3:30 PM Smith 35"
+slides_url: "Section Slides URL: [soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs)"
+format: 
+  revealjs:
+    template-partials:
+      - title-slide.html
+    smaller: true
+    scrollable: true
+    self-contained: true
+    slide-number: true
+    reference-location: "document"
+    link-external-icon: true
+    link-external-newwindow: true
+    footnotes-hover: true
+    #html-math-method: katex
+    footer: "CSSS/SOC/STAT 321 bostona Science and Statistics for Social Scicence I"
+    logo: "https://csss.uw.edu/assets/csss-logo.png"
+execute: 
+  echo: true
+  #eval: false
+  warning: false
+  message: false
+filters:
+  - reveal-auto-agenda
+auto-agenda:
+  bullets: bullets
+  heading: Agenda
+---
+
+## Goals in Week 4
+
+- Problem Set 1: More on The Use of `tapply()`.
+- QSS Tutorial 3
+- Key Questions in Week 4
+  - How can we describe and visualize the distribution of a single variable?
+  - What are the two basic approaches for inference when we have missing data?
+  - Why can missing data induce bias to our inference?
+- Data Visualization in `R`
+  - Base `R`
+  - `ggplot2`
+
+---
+
+```{r}
+
+boston <- read.csv("./data/boston.csv")
+
+age_quartiles <- quantile(boston$age)
+age_quartile_groups <- cut(boston$age, breaks = age_quartiles, include.lowest = TRUE) # the way we define the intervals can change results dramatically (try `right = FALSE`)
+group_means_by_age <- tapply(
+  boston$numberim.post - boston$numberim.pre,
+  list(boston$treatment, age_quartile_groups),
+  mean, na.rm = TRUE
+)
+ate_by_age <- group_means_by_age[2, ] - group_means_by_age[1, ]
+ate_by_age
+```
+
+---
+
+# Missing Data
+
+## Dealing with Missing Data
+
+- Basic Approaches of handing missing data
+  - Available-Data Analysis (Pairwise Deletion): drop variables (columns) with missing values
+  - Complete-Data Analysis (Listwise Deletion): drop observations (rows) with missing values
+- The Impact of Missing Data on Inference
+  - Missing Completely at Random (MCAR): missing values are not depend on any observable and unobservable characteristics
+  - Missing at Random (MAR): missing values are related to observable characteristics.
+    - e.g. Students spending less time on study are more likely to miss the test.
+  - Missing not at Random (MNAR): missing values are related to missing values themselves, or unobservable characteristics.
+    - e.g. Some students are too shy to report their low test scores.
+
+# Data Visualization in `R`
+
+## Graphic System in `R`
+
+- Elements in grahic system
+  - Graphic device: canvas (window or file) on which a graph is drawn and saved for export to other applications, e.g. a PDF file; a PNG file; the RStudio graphics window
+  - Low-level graphics system: provides a coherent set of primitive tools for drawing graphs on devices, e.g. `base`, `grid` in `R`
+  - High-level graphics system: works on top of one specific low-level system to provide efficient and powerful user-end tools, e.g. `ggplot2`, `lattice`
+- Programming Approaches
+  - Imperative Programming: e.g. `base`, `grid`
+    - Step-by-step instructions to control the exact construction of output
+    - Hands on and more work: craft your solution the way you want it
+    - Uses procedures and object-orientation for convenience
+  - Declarative Programming: e.g. `ggplot2`, `lattice`
+    - Define your problem; allow software to apply a standard solution
+    - Defaults may be pretty good; if not, you may customize with a stylesheet
+    - Major changes can be hard without switching to procedural coding
+
+---
+
+![](./img/raster_vector.png)
+
+| |Lossy|Lossless|
+|:---:|:---:|:---:|
+|Raster|.jpeg, .gif|.png, .tiff|
+|Vector| - |.pdf, .ps, .eps, .ai|
+
+---
+
+## Base `R`
+
+- Univariate Distribution
+  - Barplot for Discrete Variable
+  - Histogram for Continuous Variable
+    - "Density" refers to the estimated probability density of the data at different points along the variable's range.
+  - Boxplot: visualize univariate distribution based on quartiles.
+    - Boxplot is convenient to compare distributions of the same variable across groups.
+    - Some people criticize that boxplot may lose some information; a variety of plots emerge to compensate for the shortcoming of boxplot, such as violin plot, bean plot, etc.
+- Bivariate Distribution
+  - Scatter plot
+  - (Optional) Correlation
+  - (Optional) Quantile-Quantile Plot
+
+
+$$
+\text{Normalized Density (height)} = \frac{\frac{\text{Num.Obs. in a bin}}{\text{total Num.Obs.}} }{\text{Bin range (width)}}
+$$
+
+
+
+```{r}
+
+library(gapminder)
+
+gapminder_2002 <- subset(gapminder, year == 2002)
+
+hist(gapminder_2002$lifeExp, breaks = 20, freq = FALSE); lines(density(gapminder_2002$lifeExp))
+
+boxplot(gapminder_2002$lifeExp); rug(gapminder_2002$lifeExp, side = 4)
+
+```
+
+---
+
+## In-class Exercise (Base `R`)
+
+1. Install and Load `gapminder` package (`install.packages("gapminder")` and `library(gapminder)`).
+2. Subset the `gapminder` dataset to the year of 2002; create a new object called `gapminder_2002` to store the subset data frame.
+3. Draw a bar plot to visualize the number of countries in each continent in `gapminder_2002`. (Hint: Use `barplot()` and `table()`)
+4. Draw a histogram to visualize the density of life expectancy in `gapminder_2002`. The histogram has 20 bins; y-axis is density rather than frequency. (Hint: use `hist()`)
+5. Create multiple boxes within one box plot, where we want to compare the distribution of GDP per capita (y-axis) across continents. (Hint: use `boxplot()`)
+6. Create a scatter plot to show the relationship between GDP per capita (x-axis) and life expectancy (y-axis) (Hint: use `plot()`). In this graph, we want to highlight countries in Asia with red color, and countries in other continents with black color (Hint: see `col` argument in `plot()`). We also want the size of points is proportional to the population of each country (Hint: need to first rescale the population to a resonable range).
+7. At the top of your code, use `par(mfrow = c(2, 2))` to arrange your canvas with 2 rows and 2 columns.
+
+
+```{r}
+#| code-fold: true
+
+# arrange the canvas with 2 rows and 2 columns
+par(mfrow = c(2, 2), mar = rep(3, 4), oma = rep(0, 4), mgp = c(2, 0.5, 0))
+# barplot
+barplot(
+  table(gapminder_2002$continent),
+  ylim = c(0, 60), xlab = "Continent", ylab = "Number of Countries"
+)
+# histogram
+hist(
+  gapminder_2002$lifeExp, nclass = 20, freq = FALSE,
+  xlab = "Life Expectancy", main = ""
+)
+lines(density(gapminder_2002$lifeExp))
+# boxplot
+boxplot(gdpPercap ~ continent, data = gapminder_2002, xlab = "Continent", ylab = "GDP per Capita")
+# scatter plot
+plot(
+  lifeExp ~ gdpPercap,
+  col = ifelse(continent == "Asia", "red", "black"),
+  cex = (pop - min(pop)) / (max(pop) - min(pop)) * (5 - 1) + 1,
+  data = gapminder_2002,
+  xlab = "GDP per capita ($)", ylab = "Life Expectancy (Years)"
+)
+legend(
+  "bottomright", 
+  pch = c(1, 1),
+  c("Non-Asia", "Asia"), 
+  col = c("black", "red")
+)
+
+```
+
+---
+
+## `ggplot2`
+
+`ggplot2` provides a widely used and extended suite of standard graphics types and tools with strongly defined default styles and solutions to specific graphical problems.
+
+Implementation: users supply the data, request a geometry; software handles details.
+
+- Three key steps to creating a `ggplot2` graphic
+  - Establish a mapping between data variables & plotting dimensions/elements
+  - Apply the mapping to one or more standardized aesthetic elements
+  - Draw the resulting set of graphical objects to a graphics device
+- Correspond to three questions
+  - What data do you want to visualize?
+    - `ggplot(data...)`
+  - How are variables mapped to specific aesthetic attributes?
+    - `aes(x = ..., y = ...)`
+    - Many attributes: positions (x, y), shape, colour, size, fill, alpha, linetype, label, ...
+  - Which geometric shapes do you use to represent the data?
+    - `geom_point()`, `geom_line()`, `geom_histogram()`, `geom_boxplot()`, ...
+- More resources on `ggplot2`
+  - [`ggplot2` Cheatsheet](https://ggplot2.tidyverse.org/)
+  - [`R` Graph Gallery](https://r-graph-gallery.com/) and [`R` Gallery Book](https://bookdown.org/content/b298e479-b1ab-49fa-b83d-a57c2b034d49/)
+  - [`ggplot2` Extension Gallery](https://exts.ggplot2.tidyverse.org/gallery/)
+
+```{r}
+
+library(ggplot2)
+
+ggplot(aes(x = age, y = income), data = boston) +
+  geom_point()
+
+```
+
+---
+
+## In-class Exercise (`ggplot2`)
+
+1. Load `gapminder` and `ggplot2` package (`library(gapminder)` and `library(ggplot2)`).
+2. Subset the `gapminder` dataset to the year of 2002; create a new object called `gapminder_2002` to store the subset data frame.
+3. Draw a bar plot to visualize the number of countries in each continent in `gapminder_2002`. (Hint: Use `geom_bar()`)
+4. Draw a histogram to visualize the density of life expectancy in `gapminder_2002`. The histogram has 20 bins; y-axis is density rather than frequency (Hint: use `geom_histogram()`), and then overlay a density curve to the histogram (Hint: use `geom_density()`).
+5. Create multiple boxes within one box plot, where we want to compare the distribution of GDP per capita (y-axis) across continents. (Hint: use `geom_boxplot()`)
+6. Create a scatter plot to show the relationship between GDP per capita (x-axis) and life expectancy (y-axis) (Hint: use `geom_point()`). In this graph, we want to highlight countries in Asia with red color, and countries in other continents with black color (Hint: see `color` argument in `geom_point()`). We also want the size of points is proportional to the population of each country (Hint: see `size` argument in `geom_point()`).
+7. Optional: Use `patchwork` package to nicely arrange your plots.
+
+
+```{r}
+#| code-fold: true
+
+# barplot
+barplot <- ggplot(aes(x = continent), data = gapminder_2002) +
+  geom_bar() +
+  labs(x = "Continent", y = "Number of Countries")
+# histogram
+histplot <- ggplot(aes(x = lifeExp), data = gapminder_2002) +
+  geom_histogram(aes(y = ..count..), bins = 20) +
+  geom_density() +
+  labs(x = "Life Expectancy", y = "Density")
+# boxplot
+boxplot <- ggplot(aes(x = continent, y = gdpPercap), data = gapminder_2002) +
+  geom_boxplot() +
+  labs(x = "Continent", y = "GDP per capita")
+# scatter plot
+gapminder_2002$asia <- ifelse(gapminder_2002$continent == "Asia", "Asia", "Non-Asia")
+scatter_plot <- ggplot(aes(x = gdpPercap, y = lifeExp), data = gapminder_2002) +
+  geom_point(aes(color = continent, size = pop)) +
+  scale_size_continuous(name = "Population") +
+  labs(x = "GDP per capita", y = "Life Expectancy") +
+  theme_bw()
+
+library(patchwork)
+(barplot + histplot) / (boxplot + scatter_plot)
+
+```
+
+
+---
+
+## How to Save Graphs in `R`
+
+- Save any graphs, either `base` or `ggplot2`
+
+```{r}
+#| eval: false
+
+pdf("path/of/saved/graph", width = 7, height = 7)
+barplot(
+  table(gapminder_2002$continent),
+  ylim = c(0, 60), xlab = "Continent", ylab = "Number of Countries"
+)
+dev.off()
+
+```
+
+
+- Save `ggplot2` graphs
+
+```{r}
+#| eval: false
+
+ggsave(your_plot, "path/to/saved/graph", width = width_you_defined, height = width_you_defined / 1.618)
+
+```
+
+
