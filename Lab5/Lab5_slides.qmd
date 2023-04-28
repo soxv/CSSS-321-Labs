@@ -1,0 +1,186 @@
+---
+title: "CSSS/SOC/STAT 321: Lab 5"
+subtitle: "Descriptive Statistics: Two Variables"
+author: "Tao Lin"
+office_hours: "Office Hours: Fri 1:30 - 3:30 PM Smith 35"
+slides_url: "Section Slides URL: [soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs)"
+format: 
+  revealjs:
+    template-partials:
+      - title-slide.html
+    smaller: true
+    scrollable: true
+    self-contained: true
+    slide-number: true
+    reference-location: "document"
+    link-external-icon: true
+    link-external-newwindow: true
+    footnotes-hover: true
+    html-math-method: katex
+    footer: "CSSS/SOC/STAT 321 bostona Science and Statistics for Social Scicence I"
+    logo: "https://csss.uw.edu/assets/csss-logo.png"
+execute: 
+  echo: true
+  #eval: false
+  warning: false
+  message: false
+filters:
+  - reveal-auto-agenda
+auto-agenda:
+  bullets: bullets
+  heading: Agenda
+---
+
+## Goals for Week 5
+
+- QSS Tutorial 4
+- Key Question in Week 5
+  - What is selection bias in survey sampling? How can we solve this problem?
+  - How can we describe the relationship between two variables?
+- Deciphering Problem Set 2
+
+# Survey Sampling
+
+---
+
+![Source: Groves et al. 2009](./img/survey_lifecycle.png)
+
+---
+
+- Measurement
+  - Construct validity: the extent to which the measure is related to the underlying construct/concept
+  - Measurement error: 
+    - e.g. underreporting of sensitive behaviors
+  - Processing error: i.e. data entry error
+- Representation: we want our estimate of certain variable to be as representative (i.e. externally valid) as possible.
+  - Coverage error: the nonobservational gap between the target population and the sampling frame
+    - e.g. sampling through phone calls can make the resulting sample less representative.
+  - Sampling error: non observational gap between the sampling frame and the sample
+    - e.g. some members of the sampling frame are given smaller chance of selection
+  - Non-response error
+    - Unit non-response
+    - Item non-response
+  - Adjustment error
+
+# Correlation
+
+---
+
+$$
+\begin{aligned}
+\text{Corr}(x, y) =& \frac{\text{Cov}(x, y)}{\sigma_x \sigma_y} \\
+=& \frac{\frac{1}{n-1}\sum_{i=1}^n [(x_i - \bar{x}) (y_i - \bar{y})]}{\sigma_x \sigma_y} \\
+=& \frac{1}{n-1}\sum_{i=1}^n [\text{z-score}(x) \times \text{z-score}(y)]
+\end{aligned}
+$$
+
+- Covariance: To what extent the two variables covary *on average*.
+- Correlation: covariance of the two variables rescaled by their standard deviations.
+
+# Quantile-Quantile Plot
+
+---
+
+```{r}
+#| echo: false
+#| fig-height: 10
+#| fig-align: center
+
+set.seed(98105)
+x_grid <- seq(-4, 4, 0.01)
+
+par(mfrow = c(6, 2), mar = rep(0.3, 4), mai = rep(0.3, 4))
+# almost identical
+std_norm_samples <- rnorm(n = 1e3, mean = 0, sd = 1)
+hist(std_norm_samples, freq = FALSE, breaks = 20, ylim = c(0, 0.4)); lines(x_grid, dnorm(x_grid))
+qqnorm(std_norm_samples); qqline(std_norm_samples)
+
+# mean + 1
+mean_plus1_samples <- rnorm(n = 1e3, mean = 1, sd = 1)
+hist(mean_plus1_samples, freq = FALSE, breaks = 20, ylim = c(0, 0.4)); lines(x_grid, dnorm(x_grid))
+qqnorm(mean_plus1_samples); qqline(std_norm_samples)
+
+# more spread
+spread_samples <- rnorm(n = 1e3, mean = 0, sd = 2)
+hist(spread_samples, freq = FALSE, breaks = 20, ylim = c(0, 0.4)); lines(x_grid, dnorm(x_grid))
+qqnorm(spread_samples); qqline(std_norm_samples)
+
+# more concentrated
+concentrate_samples <- rnorm(n = 1e3, mean = 0, sd = 0.5)
+hist(concentrate_samples, freq = FALSE, breaks = 20, xlim = c(-3, 3)); lines(x_grid, dnorm(x_grid))
+qqnorm(concentrate_samples); qqline(std_norm_samples)
+
+# left-long-tail
+left_longtail_samples <- std_norm_samples - rgamma(n = 1e3, shape = 0.3)
+hist(left_longtail_samples, freq = FALSE, breaks = 20, ylim = c(0, 0.4)); lines(x_grid, dnorm(x_grid))
+qqnorm(left_longtail_samples); qqline(std_norm_samples)
+
+# right-long-tail
+right_longtail_samples <- std_norm_samples + rgamma(n = 1e3, shape = 0.3)
+hist(right_longtail_samples, freq = FALSE, breaks = 20, ylim = c(0, 0.4)); lines(x_grid, dnorm(x_grid))
+qqnorm(right_longtail_samples); qqline(std_norm_samples)
+
+```
+
+---
+
+# Deciphering Problem Set 2
+
+## Overview
+
+- Research Question: Does having daughters cause judges to vote in a pro-feminist direction?
+  - Study type: observational studies
+  - Explanatory variable: whether a judge has at least one daughter.
+  - Outcome variable: `progressive.vote` - The **proportion** of the judge’s votes on women’s issues which were decided in a pro-feminist direction.
+- Potential Confounders
+  - a judge's gender (Q2)
+  - a judge's party identification (Q2 & Q3)
+  - whether a judge has at least one child (Q3)
+  - the number of children (Q4)
+  - other confounders? Can we assess them in the existing data? (Q5)
+- The goal of each question
+  - Q1: summary statistics and check balance
+  - Q2: association between `progressive.vote` and two confounders - `republican` and `woman`
+  - Q3: association between `progressive.vote` and two confounders - whether a judge has at least one child and `republican`
+  - Q4: association between `progressive.vote` and explanatory variable - whether a judge has at least one daughter, conditional on the total number of children
+    - Considering confounding bias and covariate balance, should we include judges who have no child?
+  - Q5: assess the plausibility of unconfoundedness assumption
+    - Is the number of children correlated with both children's gender and `progressive.vote`?
+    - Is any other pre-treatment variables potentially correlated with both children's gender and `progressive.vote`?
+
+## Question 1
+
+- The total number of judges; gender composition and party composition
+- Party composition between male and female judges (Hint: create a contingency table showing proportion)
+- Range of the outcome variable `progressive.vote`.
+- Interpret the result.
+
+## Question 2
+
+- Create a boxplot with **one single command** to compare the distribution of `progressive.vote` across 4 groups: Republican men, Republican women, Democratic men, Democratic women. (Hint: `y ~ x1 + x2` in `boxplot()`)
+- Interpret the result.
+
+## Question 3
+
+- Create a binary variable that denotes if a judge has at least one child.
+- Compare the distribution of this binary variable between Republican and Democratic judges. (Hint: difference in means)
+- Compute the difference in means of `progressive.vote` between judges who have at least one child and those who don't.
+- Compute the difference in means of `progressive.vote` between Republican and Democratic parents.
+  - Hint: compute difference in means for each group, or use `tapply(..., list(..., ...), mean)`
+  - e.g. Republican parents: judges who are republican and who have at least one child
+
+## Question 4
+
+- Compute difference in means of `progressive.vote` between judges who have at least one daughter and those who don't have any.
+- Repeat the same computation across judges with different number of children.
+    - only focus on judges with 1, 2, and 3 children. 
+    - Hint: compute difference in means for each group, or use `tapply(..., list(..., ...), mean)`
+- What assumption do we need to interpret previous results?
+
+## Question 5
+
+Conditional on the number of children, the number of daughters a judge has is random. How can we evaluate the validity of this assumption?
+
+- Compare the means of `girls` across judges with different number of children.
+- Compare the means of `girls` across judges, divided by other potential confounders in the data.
+
