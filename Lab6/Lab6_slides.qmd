@@ -1,0 +1,491 @@
+---
+title: "CSSS/SOC/STAT 321: Lab 6"
+subtitle: "Regression"
+author: "Tao Lin"
+office_hours: "Office Hours: Fri 1:30 - 3:30 PM Smith 35"
+slides_url: "Section Slides URL: [soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs)"
+format: 
+  revealjs:
+    template-partials:
+      - title-slide.html
+    smaller: true
+    scrollable: true
+    self-contained: true
+    slide-number: true
+    reference-location: "document"
+    link-external-icon: true
+    link-external-newwindow: true
+    footnotes-hover: true
+    html-math-method: katex
+    footer: "CSSS/SOC/STAT 321 bostona Science and Statistics for Social Scicence I"
+    logo: "https://csss.uw.edu/assets/csss-logo.png"
+execute: 
+  echo: true
+  #eval: false
+  warning: false
+  message: false
+filters:
+  - reveal-auto-agenda
+auto-agenda:
+  bullets: bullets
+  heading: Agenda
+---
+
+## Goals for Week 6
+
+- QSS Tutorial 5
+- Write and Debug loops and functions in `R`
+- Key Question in Week 6
+  - How does linear regression model help us make predictions?
+  - How can we interpret the results of linear regression? (very important!)
+    - Interpret Coefficient
+    - Assess Model Fit
+- Midterm Review
+
+# Loops in `R`
+
+## Loops and Functions
+
+```{r}
+#| eval: false
+
+for (i in 1:n) {
+  print(i)
+  expression_1
+  expression_2
+  ...
+  expression_3
+}
+
+sum_two <- function(arg1, arg2) {
+  res <- arg1 + arg2
+  return(res)
+}
+
+sum_two(1, 2)
+
+```
+
+---
+
+## In-class Exercise (Predicting the 2016 US Presidential Election)
+
+We want predict electoral college votes for Trump from the latest poll.
+
+- Write a function to implement the following steps. The function should have three arguments: state name, poll data, and presidential electoral college data.
+  - For each state, subset to polls within that state
+  - Further subset the latest polls available
+  - Average the latest polls to estimate support for each candidate
+  - Allocate the electoral votes to Trump if the vote margin is positive, otherwise allocate 0 to Trump.
+- Repeatedly use your own function in step 5 to loop over all states and aggregate the electoral votes for Trump.
+
+---
+
+```{r}
+
+polls <- read.csv("/Users/soxv/Desktop/UW Courses/2023 Spring/CSSS 321/Labs/Lab6/data/polls2016.csv")
+
+
+
+
+
+
+polls$margin <- polls$trump - polls$clinton
+pres <- read.csv("./data/pres2016.csv")
+ev_pred <- rep(NA, 51) # place holder
+# create list of unique state names to label poll_pred
+state_names <- unique(polls$state)
+names(ev_pred) <- state_names
+
+allocate_ev <- function(state_name, poll_data, pres_data) {
+  # 1. For each state, subset to polls within that state
+  state_dat <- subset(poll_data, subset = (state == state_name))
+  # 2. Further subset the latest polls available
+  latest <- state_dat$days_to_election == min(state_dat$days_to_election)
+  # 3. Average the latest polls to estimate support for each candidate
+  poll_pred <- mean(state_dat$margin[latest])
+  # 4. Allocate the electoral votes to the candidate who has greatest support
+  trump_ev <- ifelse(poll_pred > 0, pres_data$ev[pres_data$state == state_name], 0)
+  return(trump_ev)
+}
+
+for(i in 1:51) {
+  print(i)
+  ev_pred[i] <- allocate_ev(state_name = state_names[i], poll_data = polls, pres_data = pres)
+}
+
+sum(ev_pred)
+
+```
+
+---
+
+
+### Tips for Writing and Debugging Loops and Functions
+
+- Tricks to Make You Code Faster
+  - Avoid creating objects in a loop; rather, pre-allocate objects before you run a loop
+    - Suppose that after a for loop you want to generate a vector called `obj` with `10^4` elements
+    - So before run a loop: `obj <- NA` 👎; `obj <- rep(NA, 10^4)` 👍
+  - [Vectorization](https://www.r-bloggers.com/2014/04/vectorization-in-r-why/)
+  - [Parallelization](https://nceas.github.io/oss-lessons/parallel-computing-in-r/parallel-computing-in-r.html) (less relevant for this class)
+  - Find a better package: some packages use C++ or support parallelization, so they can run faster.^[You can browse and find relevant R packages on [R-universe](https://r-universe.dev/search/).]
+  - Find a better machine, e.g. [cloud computing](https://lse-my472.github.io/week11/my472-week11-cloud.pdf) (less relevant for this class)
+- Tricks to Make Debugging Easier
+  - Write a well-commented code; Name your variables meaningfully and [consistently](https://curc.readthedocs.io/en/latest/programming/coding-best-practices.html)
+    - [The tidyverse style guide](https://style.tidyverse.org/)
+  - Print some information when wrangling data or running loops
+    - If you encounter errors in a loop, you can print some message to see which iteration the error comes from.
+    - print information from a time-consuming loop can also reduce your anxiety.
+    - use `progress` to track the progress of complex loops (track progress with parallelization: [`pbmcapply`](https://kevinkuang.net/tracking-progress-in-r-ad97998c359f/))
+  - Reduce the number of iterations in a loop
+  - Fix the [random seed](https://www.statisticshowto.com/random-seed-definition/)
+  - Can use `debug` or `debugonce()` to isolate function in a debugger environment
+    - cannot change the content of function if you do not have the source code of the function.
+    - but you can still inspect how the value of variables change within it!
+
+---
+
+# Linear Regression
+
+## Regression as a CEF
+
+### Relationship Between Difference in Means and Regression
+
+- In previous weeks, we have learned how to derive average treatment effect by simply computing difference in means between different groups. The key is to compute the conditional expectations (i.e. group means).
+- Setup:
+  - $\mu$: the mean of a random variable
+  - $Y$: outcome variable, e.g. students' test scores
+  - $X$: explanatory variable, e.g. whether students use ChatGPT
+- Conditional expectation (i.e. group mean) as a function
+  - $\mu_y(x)$: a function that uses $x$ as the input to compute the mean of $y$ as its output. We call it "conditional expectation function (CEF)."
+  - Alternatively, we use expectation $\mathbb{E}(Y)$ to denote the mean of $Y$.
+    - The conditional expectation of $Y$ given $X=x$ can be expressed as $\mathbb{E}(Y|X=x)$.
+    - e.g. what are the average test scores given students' usage of ChatGPT?
+      - $\mathbb{E}(Y|X=1)$: the average test scores for people who use ChatGPT
+      - $\mathbb{E}(Y|X=0)$: the average test scores for people who don't use ChatGPT
+
+$$
+\begin{aligned}
+\text{ATE} =& \mu_y(x = 1) - \mu_y(x = 0) \\
+=& \mathbb{E}(Y | X = 1) - \mathbb{E}(Y | X = 0)
+\end{aligned}
+$$
+
+- The goal of regression is to estimate the CEF $\hat{\mu}(x) = \hat{\mathbb{E}}(Y|X = x)$.
+
+---
+
+### Regression with a Binary Predictor
+
+When we run a linear regression model based on a binary predictor, we can rewrite the formula as a linear combination between conditional expectations and the average effect of the binary variable:
+
+$$
+\begin{aligned}
+Y =& \beta_0 + \beta_1 X \\
+=& \mathbb{E}(Y|X = 0) + \text{ATE} \cdot \mathbb{I}(X = 1) \\
+=& \begin{cases}
+\mathbb{E}(Y|X = 0) & \text{ (if } X = 0) \\
+\mathbb{E}(Y|X = 0) + \text{ATE} & \text{ (if } X = 1)
+\end{cases}
+\end{aligned}
+$$
+
+Namely, the slope $\beta_1 = \Delta y / \Delta x$ is the average effect.
+
+```{r}
+
+# we want to look at the impact of having daughters on the proportion of progressive votes.
+dbj <- read.csv("./data/dbj.csv")
+parents <- subset(dbj, child > 0)
+parents$has_daughter <- ifelse(parents$girls > 0, 1, 0)
+# average progressive.vote for parents who have at least one daughter
+mean(parents$progressive.vote[parents$has_daughter == 1])
+# average progressive vote for parents who don't have daughter
+mean(parents$progressive.vote[parents$has_daughter == 0])
+# the effect of having at least one daughter on progressive.vote
+mean(parents$progressive.vote[parents$has_daughter == 1]) - mean(parents$progressive.vote[parents$has_daughter == 0])
+
+# difference in means is equivalent to linear regression based on a binary predictor
+# progressive.vote = mean(no daughter) + ATE x (whether has daughter)
+lm(progressive.vote ~ has_daughter, data = parents)
+
+```
+
+---
+
+```{r}
+#| echo: false
+
+library(tidyverse)
+
+ggplot(aes(x = has_daughter, y = progressive.vote), data = parents) +
+  geom_violin(aes(group = cut_width(has_daughter, 0.5))) +
+  geom_point(position = position_jitter(0.1)) +
+  geom_smooth(method = "lm", se = FALSE, fullrange = TRUE, span = 3) +
+  geom_point(
+    data = parents %>%
+      group_by(has_daughter) %>%
+      summarise(group_mean = mean(progressive.vote)),
+    mapping = aes(x = has_daughter, y = group_mean),
+    color = "red", size = 3
+  ) +
+  xlim(c(-0.5, 1.5)) +
+  theme_bw()
+
+```
+
+---
+
+### Regression as a CEF
+
+- Different types of CEFs:
+  - CEF with binary predictor
+  - CEF with continuous predictor: see the next slide
+  - CEF with multiple predictor: allows us to make more detailed"all else equal" comparisons (ceteris paribus)
+    - e.g. $\mathbb{E}(\text{test score} | \text{use ChatGPT}, \text{Senior})$
+    - e.g. $\mathbb{E}(\text{test score} | \text{don't use ChatGPT}, \text{Senior})$
+- Functional Forms
+  - linear: $\mu_y(x) = \beta_0 + \beta_1 x$ (we only focus on this!)
+  - quadratic: $\mu_y(x) = \beta_0 + \beta_1 x + \beta_2 x^2$
+  - some crazy nonlinear form: $\mu_y(x) = 1/(\beta_0 + \beta_1 x)$
+- we can always decompose $Y$ into a systematic part and a residual part: $Y = \mathbb{E}(Y|X=x) + \varepsilon$
+  - systematic part explained by $X$
+  - residual part that is uncorrelated with $X$
+
+---
+
+### Regression with a Continuous Predictor
+
+```{r}
+
+parents$girl_prop <- parents$girls / parents$child
+
+ggplot(aes(x = girls, y = progressive.vote), data = parents) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, fullrange = TRUE) +
+  geom_point(
+    data = parents %>%
+      group_by(girls) %>%
+      summarise(group_mean = mean(progressive.vote)),
+    mapping = aes(x = girls, y = group_mean),
+    color = "red", size = 3
+  ) +
+  xlim(c(-0.5, 6)) +
+  theme_bw()
+
+```
+
+---
+
+## Regression/CEF as the Best Predictions of $Y$
+
+- Total Variation (sum of squared totals, SST): $\text{TSS} = \sum_{i=1}^n (Y_i - \bar{Y})^2$
+- Explained Variation (sum of squared explained, SSE): $\text{SSE} = \sum_{i=1}^n (\hat{y} - \bar{Y})^2$
+- Unexplained Variation (sum of squared residuals, SSR): $\text{SSR} = \sum_{i=1}^n (Y_i - \hat{Y})^2$
+
+We want to minimize the unexplained variation (the sum of squared residuals, thus it is called "least squares"):
+
+$$
+\underset{\beta}{\arg\min}\sum_{i=1}^n\varepsilon_i^2 = \underset{\beta}{\arg\min} \sum_{i=1}^n (Y_i - \hat{Y})^2 = \underset{\beta}{\arg\min}\sum_{i=1}^n (Y_i - \beta_0 - \beta_1 X_i)^2
+$$
+
+We can see that linear regression will be sensitive to outliers because their squared deviations are very large.
+
+```{r}
+#| echo: false
+#| fig-align: center
+
+midterms <- read.csv("./data/midterms.csv")
+lm_res <- lm(seat.change ~ approval, data = midterms)
+midterms$y_fitted <- coef(lm_res)[1] + coef(lm_res)[2] * midterms$approval
+midterms$y_mean <- mean(midterms$seat.change, na.rm = TRUE)
+
+ggplot(aes(x = approval, y = seat.change), data = midterms) +
+  geom_point() +
+  geom_segment(aes(xend = approval, yend = y_fitted), color = "blue", alpha = 0.3, size = 2) +
+  geom_hline(aes(yintercept = mean(seat.change, na.rm = TRUE))) +
+  geom_segment(aes(xend = approval, yend = y_mean)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_bw()
+
+```
+
+---
+
+## Estimating Coefficients (Not Required; Good to Know)
+
+### Simple Linear Regression with One Predictor
+
+$$
+\text{SSR} = f(\beta_0, \beta_1) = \sum_{i=1}^n (Y_i - \beta_0 - \beta_1 X_{i})^2
+$$
+
+The sum of squared residuals is a quadratic function with two unknown parameters $\beta_0$ and $\beta_1$, and we need to use partial derivatives to find its minimum.
+
+The first-order conditions w.r.t. $\beta_k$ are:
+
+$$
+\begin{aligned}
+\frac{\partial \text{SSR}}{\partial \beta_0} =& -2 \cdot \sum_{i=1}^n (Y_i - \beta_0 - \beta_1 X_{i}) = 0 \\
+\frac{\partial \text{SSR}}{\partial \beta_1} =& -2 \cdot \sum_{i=1}^n (Y_i - \beta_0 - \beta_1 X_{i}) \cdot X_i = 0
+\end{aligned}
+$$
+
+Rearrange them, we get
+
+$$
+\begin{aligned}
+\beta_0 =& \sum_{i=1}^n Y_i - \beta_1 \sum_{i=1}^n X_i = \bar{Y} - \beta_1 \bar{X} \\
+\beta_1 =& \frac{\sum_{i=1}^n [(Y_i - \bar{Y}) (X_i - \bar{X})]}{\sum_{i=1}^n (X_i - \bar{X})^2} = \frac{\text{Cov}(X, Y)}{\text{Var}(X)} = \text{Corr}(X, Y) \cdot \frac{\text{SD}_x}{\text{SD}_y}
+\end{aligned}
+$$
+
+- Properties of linear regression
+  - The equation of $\beta_0$ means that the fitted line will always go through the sample means $(\bar{X}, \bar{Y})$.
+  - The equation of $\beta_1$ means that the slope is the ratio of the covariance of $X$ and $Y$ to the variance of $X$, or the correlation coefficient between $X$ and $Y$ that is re-scaled by a constant.
+
+---
+
+### Linear Regression with Multiple Predictors
+
+$$
+\text{SSR} = f(\beta_0, \beta_1, \cdots, \beta_K) = \sum_{i=1}^n (Y_i - \beta_0 - \beta_1 X_{1i} - \beta_2 X_{2i} - \cdots - \beta_K X_{Ki})^2
+$$
+
+The first-order conditions w.r.t. $\beta_k$ constitute $(K + 1)$ linear equations:
+
+$$
+\begin{aligned}
+\frac{\partial \text{SSR}}{\partial \beta_0} =& -2 \cdot \sum_{i=1}^n (Y_i - \beta_0 - \beta_1 X_{1i} - \beta_2 X_{2i} - \cdots - \beta_K X_{Ki}) = 0 \\
+\frac{\partial \text{SSR}}{\partial \beta_1} =& -2 \cdot \sum_{i=1}^n (Y_i - \beta_0 - \beta_1 X_{1i} - \beta_2 X_{2i} - \cdots - \beta_K X_{Ki}) \cdot X_i = 0 \\
+\vdots \\
+\frac{\partial \text{SSR}}{\partial \beta_K} =& -2 \cdot \sum_{i=1}^n (Y_i - \beta_0 - \beta_1 X_{1i} - \beta_2 X_{2i} - \cdots - \beta_K X_{Ki}) \cdot X_i = 0 \\
+\end{aligned}
+$$
+
+However, solving these equations are tedious. We can use matrix methods to derive the coefficients. Suppose we rewrite our regression model using matrix symbols:
+
+$$
+\underbrace{\boldsymbol y}_{n \times 1} = \underbrace{\boldsymbol X}_{n \times K} \cdot \underbrace{\boldsymbol \beta}_{K \times 1} + \underbrace{\boldsymbol \varepsilon}_{n \times 1}
+$$
+where
+$$
+\boldsymbol y = \begin{bmatrix}
+y_1 \\ y_2 \\ \vdots \\ y_i
+\end{bmatrix}
+\text{ , }
+\boldsymbol X = \begin{bmatrix}
+1 & x_{11} & x_{21} & \cdots & x_{K1} \\
+1 & x_{12} & x_{22} & \cdots & x_{K2} \\
+\vdots & \vdots & \vdots & \ddots & \vdots \\
+1 & x_{1n} & x_{2n} & \cdots & x_{Kn} \\
+\end{bmatrix}
+\text{ , and }
+\boldsymbol \beta = \begin{bmatrix}
+\beta_1 \\ \beta_2 \\ \vdots \\ \beta_K
+\end{bmatrix}
+$$
+
+The first-order condtion w.r.t. $\boldsymbol \beta$ is:
+$$
+-2 \boldsymbol X^\top (\boldsymbol Y - \boldsymbol X \boldsymbol \beta) = 0
+$$
+
+Rearrange it, we have
+$$
+\boldsymbol \beta = (\underbrace{\boldsymbol X^\top \boldsymbol X}_{\propto\text{Var}(X)})^{-1} \underbrace{\boldsymbol X^\top \boldsymbol Y}_{\propto\text{Cov}(X, Y)}
+$$
+
+
+# Interpretation of Regression Results
+
+## Coefficients
+
+```{r}
+lm_res <- lm(seat.change ~ approval + rdi.change, data = midterms)
+lm_res
+```
+
+$$
+\begin{equation}
+\tag{1}
+\texttt{seat.change} = -121.116 + 1.585 \times \texttt{approval} + 4.230 \times \texttt{rdi.change}
+\end{equation}
+$$
+
+- Interpret the coefficent for `(Intercept)`: `seat.change` will be -121.116 when both `approval` and `rdi.change` equal to 0. (this scenario may not be realistic)
+
+- Interpret the coefficent for `approval`
+
+$$
+\begin{equation}
+\tag{2}
+\texttt{seat.change} = -121.116 + 1.585 \times (\texttt{approval} + 1) + 4.230 \times \texttt{rdi.change}
+\end{equation}
+$$
+
+subtract (1) from (2), we have
+$$
+\Delta \texttt{seat.change} = 1.585
+$$
+
+It means that all else equal/holding other covariates constant/*ceteris paribus*, if `approval` increases by 1 percent, `seat.change` will increase by 1.585 percent on average.
+
+- Interpret the coefficent for `rdi.change`
+
+$$
+\begin{equation}
+\tag{3}
+\texttt{seat.change} = -121.116 + 1.585 \times \texttt{approval} + 4.230 \times (\texttt{rdi.change} + 1)
+\end{equation}
+$$
+
+subtract (1) from (3), we have
+$$
+\Delta \texttt{seat.change} = 4.230
+$$
+
+It means that all else equal/holding other covariates constant/*ceteris paribus*, if `rdi.change` increases by 1 percent, `seat.change` will increase by 4.230 percent on average.
+
+## Model Fit
+
+- Coefficient of determinant, or R squared:
+
+$$
+\begin{aligned}
+&R^2 = \frac{\text{explained variation}}{\text{total variation}} = \frac{\text{SSE}}{\text{SST}} = \frac{\text{SST} - \text{SSR}}{\text{SST}} = 1 - \frac{\text{SSR}}{\text{SST}} \\
+&\text{adjusted } R^2 = 1 - \frac{SSR / (n - K)}{SST / (n - 1)}
+\end{aligned}
+$$
+
+# Midterm Review
+
+---
+
+- Theoretical Concepts (important for interpretation)
+  - Why do we prefer randomization?
+  - What is confounding bias?
+  - Why can missing data also induce bias?
+  - Internal vs. External Validity
+- Programming
+  - Load data
+    - Option 1: feed absolute path to data file in `read.csv()`
+    - Option 2: set working directory to the target folder, and then read the data file in the folder using `read.csv()`.
+      - If you load data in RMarkdown, we don't need to specify working directory as long as the data file and the RMarkdown file are located in the same folder.
+    - Option 3: open the target folder as an `R` project.
+  - Subset vector or `data.frame`
+    - For vector: `vector[num]` or `vector[condition]`
+    - For `data.frame`:
+      - obtain specific rows: `dat[num, ]` or `dat[condition, ]` or `subset(dat, condition)`
+      - obtain specific columns: `dat$variable` or `dat[, variable]`
+      - obtain specific cells: `dat[num, num]` or `dat[condition, variable]`
+    - `condition` is a logical vector with only `TRUE` or `FALSE` values. We use `==`, `!=`, `>` and `<` to generate conditions and use `|`, `&` or `!` to combine or alter conditions.
+  - Descriptive Statistics
+    - `mean(..., na.rm = TRUE)` or `sum(..., na.rm = TRUE)`
+    - `tapply(vector, index, function)`: apply a function to the vector, divided by the index.
+      - e.g. `tapply(dat$outcome, dat$treatment, mean, na.rm = TRUE)`
+      - e.g. `tapply(dat$outcome, list(dat$treatment, dat$group), mean, na.rm = TRUE)`
+  - Compute difference in means to derive average treatment effects.
+  
+

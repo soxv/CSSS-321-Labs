@@ -83,13 +83,13 @@ $$
 
 ```{r}
 #| echo: false
-#| fig-height: 10
+#| fig-height: 20
 #| fig-align: center
 
 set.seed(98105)
 x_grid <- seq(-4, 4, 0.01)
 
-par(mfrow = c(6, 2), mar = rep(0.3, 4), mai = rep(0.3, 4))
+par(mfrow = c(7, 2), mar = rep(0.3, 4), mai = rep(0.3, 4))
 # almost identical
 std_norm_samples <- rnorm(n = 1e3, mean = 0, sd = 1)
 hist(std_norm_samples, freq = FALSE, breaks = 20, ylim = c(0, 0.4)); lines(x_grid, dnorm(x_grid))
@@ -120,11 +120,56 @@ right_longtail_samples <- std_norm_samples + rgamma(n = 1e3, shape = 0.3)
 hist(right_longtail_samples, freq = FALSE, breaks = 20, ylim = c(0, 0.4)); lines(x_grid, dnorm(x_grid))
 qqnorm(right_longtail_samples); qqline(std_norm_samples)
 
+# bimodal
+bimodal_samples <- c(rnorm(n = 5e2, mean = -1, sd = 0.5), rnorm(n = 5e2, mean = 1, sd = 0.5))
+hist(bimodal_samples, freq = FALSE, breaks = 20, xlim = c(-3, 3), ylim = c(0, 0.4)); lines(x_grid, dnorm(x_grid))
+qqnorm(bimodal_samples); qqline(std_norm_samples)
+
 ```
 
 ---
 
 # Deciphering Problem Set 2
+
+---
+
+ -------------------------------- ----------------------------------------------------------
+ Name                             Description
+ -------------------------------- ----------------------------------------------------------
+ `name`                           The judge’s name
+ 
+ `child`                          The number of children each judge has.
+ 
+ `circuit.1`                      Which federal circuit the judge serves in.
+ 
+ `girls`                          The number of female children the judge has.
+ 
+ `progressive.vote`               The proportion of the judge’s votes on women’s issues which 
+                                  were decided in a pro-feminist direction.
+                                  
+ `race`                           The judge’s race (`1` = white, `2` = African-American, 
+                                  `3` = Hispanic, `4` = Asian-American).
+                                  
+ `religion`                       The judge’s religion (`1` = Unitarian, `2` = Episcopalian, `3` = Baptist, 
+                                  `4` = Catholic, `5` = Jewish, `7` = Presbyterian, `8` = Protestant, 
+                                  `9` = Congregationalist, `10` = Methodist, `11` = Church of Christ, 
+                                  `16` = Baha'i, `17` = Mormon, `21` = Anglican, `24` = Lutheran, `99` = unknown). 
+                                  
+ `republican`                     Takes a value of `1` if the judge was appointed by a Republican president, `0` otherwise.
+                                  Used as a proxy for the judge’s party.
+                                  
+ `sons`                           The number of male children the judge has.
+ 
+ `woman`                          Takes a value of `1` if the judge is a woman, `0` otherwise.
+ 
+ `X`                              Indicator for the observation number.
+ 
+ `yearb`                          The year the judge was born.
+ -------------------------------------------------------------------------------------------
+ 
+
+---
+
 
 ## Overview
 

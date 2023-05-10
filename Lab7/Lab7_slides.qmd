@@ -1,0 +1,449 @@
+---
+title: "CSSS/SOC/STAT 321: Lab 7"
+subtitle: "Linear Regression: Nonlinear Terms"
+author: "Tao Lin"
+office_hours: "Office Hours: Fri 1:30 - 3:30 PM Smith 35"
+slides_url: "Section Slides URL: [soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs)"
+format: 
+  revealjs:
+    template-partials:
+      - title-slide.html
+    smaller: true
+    scrollable: true
+    self-contained: true
+    slide-number: true
+    reference-location: "document"
+    link-external-icon: true
+    link-external-newwindow: true
+    footnotes-hover: true
+    html-math-method: katex
+    footer: "CSSS/SOC/STAT 321 Data Science and Statistics for Social Scicence I"
+    logo: "https://csss.uw.edu/assets/csss-logo.png"
+execute: 
+  echo: true
+  #eval: false
+  warning: false
+  message: false
+filters:
+  - reveal-auto-agenda
+auto-agenda:
+  bullets: bullets
+  heading: Agenda
+---
+
+## Goals for Week 7
+
+- QSS Tutorial 6
+- Key Question in Week 7
+  - How can we add and interpret categorical terms in a linear regression model?
+  - How can we add and interpret interaction terms in a linear regression model?
+  - How can we diagnose and add non-linear terms in a linear regression model?
+  - How can we use regression model and counterfactual scenarios to predict outcome variable.
+- Midterm Exam
+
+---
+
+# Categorical Terms
+
+---
+
+- If $X$ is a binary predictor, we have shown that $\beta_1$ is the average effect of $X$ on $Y$.
+
+$$
+Y_i = \beta_0 + \beta_1 X_i + \varepsilon_i
+$$
+
+- If our explanatory variable is a categorical variable with more than 2 categories, we need to "binarize" it into multiple binary variables, each of which denotes one category.
+  - Optional: if the categorical variable is numeric typc in `R`, we need to transform it to factor or character variable.
+  - choose one category as the *baseline/reference* category
+  - code each of the other categories as a binary variable, called a *dummy* variable.
+
+:::{.columns}
+
+:::{.column width=45%}
+
+| ID | Group |
+|---|---|
+| 1 | Group 1 |
+| 2 | Group 2 |
+| 3 | Group 3 |
+| 4 | Group 4 |
+
+:::
+
+:::{.column width=5%}
+$$
+\Rightarrow
+$$
+:::
+
+:::{.column width=45%}
+
+| ID |Group 2 | Group 3 | Group 4 |
+|---|---|---|---|
+| 1 | 0 | 0 | 0 |
+| 2 | 1 | 0 | 0 |
+| 3 | 0 | 1 | 0 |
+| 4 | 0 | 0 | 1 |
+
+:::
+
+:::
+
+- Interpretation for coefficients of categorical variables
+  - $\beta_0$: group mean of reference category
+  - $\beta_j$ $(j \neq \text{ref})$: the average effect of category $j$ compared to the reference category
+    - $\beta_0 + \beta_j$: group mean of category $j$
+
+$$
+Y_i = \beta_0 + \beta_1 \cdot \mathbb{I}(X_i = C_2) + \beta_2 \cdot \mathbb{I}(X_i = C_3) + \beta_3 \cdot \mathbb{I}(X_i = C_4) + \varepsilon_i
+$$
+
+---
+
+```{r}
+
+data(social, package = "qss")
+social <- unique(social)
+
+# categorical variable
+social$messages |> head(n = 10)
+
+# binarization/one-hot encoding inside the `lm()` function
+model.matrix(~ messages, data = social) |> head() # allow intercept
+model.matrix(~ -1 + messages, data = social) |> head() # drop intercept to recover reference category
+
+lm(primary2006 ~ messages, data = social) # intercept can be interpreted as the mean of the first quartile group, and coefficient can be interpret as the average effect of the other three quartile groups.
+
+lm(primary2006 ~ -1 + messages, data = social) # if we drop the intercept, then the coefficient can be directly interpreted as the means of each quartile group.
+tapply(social$primary2006, social$messages, mean, na.rm = TRUE) # dropping intercept is equivalent to using `tapply()` to compute group means
+
+```
+
+---
+
+# Interaction Terms
+
+## Binary + Binary
+
+```{r}
+
+res <- lm(
+  primary2006 ~ primary2004 + messages + primary2004:messages,
+  data = social,
+  subset = messages %in% c("Control", "Neighbors")
+) # or we can specify `lm(primary2006 ~ primary2004 * messages, ...)`
+res
+```
+
+$$
+\begin{aligned}
+\texttt{primary2006} =& \underbrace{0.23711}_{\beta_0} + \underbrace{0.14870}_{\beta_1} \times \texttt{primary2004} + \underbrace{0.06930}_{\beta_2} \times \texttt{messagesNeighbors} \\
+& + \underbrace{0.02723}_{\beta_3} \times \texttt{primary2004:messagesNeighbors}
+\end{aligned}
+$$
+
+
+|  |Control ($\texttt{messagesNeighbors} = 0$)|Neighbors ($\texttt{messagesNeighbors} = 1$)|
+|---|---|---|
+|Didn't Vote in 2004 ($\texttt{primary2004} = 0$)|$\beta_0$|$\beta_0 + \beta_2$|
+|Voted in 2004 ($\texttt{primary2004} = 1$)|$\beta_0 + \beta_1$|$\beta_0 + \beta_1 + \beta_2 + \beta_3$|
+
+
+```{r}
+# create hypothetical scenarios to get predictions
+hypo_dat <- expand.grid(
+  primary2004 = c(0, 1),
+  messages = c("Control", "Neighbors")
+)
+hypo_dat$lm_pred <- predict(res, newdata = hypo_dat)
+hypo_dat
+```
+
+---
+
+## Binary + Continuous
+
+```{r}
+
+social$age <- 2006 - social$yearofbirth
+res <- lm(
+  primary2006 ~ age + messages + age:messages,
+  data = social,
+  subset = messages %in% c("Control", "Neighbors")
+)
+res
+```
+
+$$
+\begin{aligned}
+\texttt{primary2006} =& \underbrace{0.0975}_{\beta_0} + \underbrace{0.0039}_{\beta_1} \times \texttt{age} + \underbrace{0.0498}_{\beta_2} \times \texttt{messagesNeighbors} \\
+& + \underbrace{0.0006}_{\beta_3} \times \texttt{age:messagesNeighbors} \\
+=& (\beta_0 + \beta_1 \times \texttt{age}) + \texttt{messagesNeighbors} \times (\beta_2 + \beta_3 \times \texttt{age}) \\
+=& \begin{cases}
+\beta_0 + \beta_1 \times \texttt{age} & \text{if } \texttt{messagesNeighbors} = 0 \\
+(\beta_0 + \beta_2) + (\beta_1 + \beta_3) \times \texttt{age} & \text{if } \texttt{messagesNeighbors} = 1
+\end{cases}
+\end{aligned}
+$$
+
+---
+
+```{r}
+
+hypo_dat <- expand.grid(
+  age = seq(from = 25, to = 85, by = 20),
+  messages = c("Control", "Neighbors")
+)
+hypo_dat$primary2006_pred <- predict(res, newdata = hypo_dat)
+hypo_dat
+
+plot(primary2006_pred ~ age, type = "l", col = "blue", data = subset(hypo_dat, messages == "Control"))
+lines(primary2006_pred ~ age, type = "l", col = "red", data = subset(hypo_dat, messages == "Neighbors"))
+legend("bottomright", title = "Household Size", c("Control", "Neighbors"), lty = 1, col = c("blue", "red"))
+```
+
+---
+
+## Continuous + Continuous
+
+```{r}
+
+res <- lm(
+  primary2006 ~ age + hhsize + age:hhsize,
+  data = social
+)
+res
+
+```
+
+$$
+\begin{aligned}
+\texttt{primary2006} =& \underbrace{0.3310}_{\beta_0} - \underbrace{0.0003}_{\beta_1} \times \texttt{age} - \underbrace{0.0943}_{\beta_2} \times \texttt{hhsize} \\
+& + \underbrace{0.0019}_{\beta_3} \times \texttt{age:hhsize} \\
+=& (\beta_0 + \beta_1 \times \texttt{age}) + \texttt{hhsize} \times (\beta_2 + \beta_3 \times \texttt{age}) \\
+=& (\beta_0 + \beta_2 \times \texttt{hhsize}) + \texttt{age} \times (\beta_1 + \beta_3 \times \texttt{hhsize})
+\end{aligned}
+$$
+
+---
+
+
+```{r}
+
+hypo_dat <- expand.grid(
+  age = c(25, 45, 65),
+  hhsize = c(2, 3, 4)
+)
+hypo_dat$primary2006_pred <- predict(res, newdata = hypo_dat)
+hypo_dat
+
+plot(primary2006_pred ~ age, type = "l", col = "blue", data = subset(hypo_dat, hhsize == 2))
+lines(primary2006_pred ~ age, type = "l", col = "green", data = subset(hypo_dat, hhsize == 3))
+lines(primary2006_pred ~ age, type = "l", col = "red", data = subset(hypo_dat, hhsize == 4))
+legend("bottomright", c("2", "3", "4"), lty = 1, col = c("blue", "green", "red"))
+
+
+plot(primary2006_pred ~ hhsize, type = "l", col = "blue", data = subset(hypo_dat, age == 25), ylim = c(0, 0.5))
+lines(primary2006_pred ~ hhsize, type = "l", col = "green", data = subset(hypo_dat, age == 45))
+lines(primary2006_pred ~ hhsize, type = "l", col = "red", data = subset(hypo_dat, age == 65))
+legend("bottomright", title = "Age", c("25", "45", "65"), lty = 1, col = c("blue", "green", "red"))
+
+```
+
+---
+
+Sometimes the values of continuous covariates cannot be zero. The unrealistic "zero" scenario often makes our interpretation non-sense. To ease our interpretation, we can **center** our covariates, that is,
+
+$$
+Y_i = \beta_0 + \beta_1 (X_i - \bar{X}) + \beta_2 (Z_i - \bar{Z}) + \beta_3 (X_i - \bar{X}) (Z_i - \bar{Z})
+$$
+
+- $\beta_0$: the value of $Y$ when both $X$ and $Z$ equal to their means.
+- $\beta_1$: the average effect of $X$ on $Y$ when $Z$ equal to its mean.
+- $\beta_2$: the average effect of $Z$ on $Y$ when $X$ equal to its mean.
+- $\beta_3$:
+  - If $X$ increase by 1 unit, the average effect of $Z$ on $Y$ will increase by $\beta_3$ units.
+  - If $Z$ increase by 1 unit, the average effect of $X$ on $Y$ will increase by $\beta_3$ units.
+
+The resulting coefficients will be different, but the predicted values of outcome variable will remain unchanged.
+
+```{r}
+
+social$age_centered <- social$age - mean(social$age)
+social$hhsize_centered <- social$hhsize - mean(social$hhsize)
+res <- lm(
+  primary2006 ~ age_centered + hhsize_centered + age_centered:hhsize_centered,
+  data = social
+)
+res
+
+hypo_dat <- expand.grid(
+  age_centered = c(25 - mean(social$age), 45 - mean(social$age), 65 - mean(social$age)),
+  hhsize_centered = c(2 - mean(social$age), 3 - mean(social$age), 4 - mean(social$age))
+)
+hypo_dat$primary2006_pred <- predict(res, newdata = hypo_dat)
+hypo_dat
+
+```
+
+---
+
+# Non-linear Terms
+
+---
+
+## In-class Exercise
+
+1. Download and load the `health2.csv` data from Canvas.
+2. Subset the data set with the condition `grepl("2017", date)`. That is, we only consider records in 2017.
+3. Regress `weight` on `dayofyear`, `steps.lag`, `calorie.lag`. We call it a restricted model.
+4. Plot residuals against each explanatory variable. Which non-linear term do we need to add?
+5. Rerun the regression model, but this time we add a quadratic term of `dayofyear`, an interaction term between `dayofyear` and `calorie.lag`, and an interaction term between `I(dayofyear^2)` and `calorie.lag`. We call it an unrestricted model.
+6. (Optional) Perform an F-test between restricted model and unrestricted model using `anova()`.
+7. Use the following code to create several counterfactual scenarios
+
+```{r}
+#| eval: false
+
+hypo_dat <- expand.grid(
+  dayofyear = 1:365,
+  calorie.lag = quantile(health$calorie.lag, c(0.25, 0.5, 0.75)),
+  steps.lag = mean(health$steps.lag)
+)
+
+```
+
+8. Use the unrestricted model and counterfactual scenarios to predict weights.
+9. Plot predicted values (y-axis) under different dayofyear (x-axis) when calorie.lag equals to the first quartile, median, and the third quartile, respectively.
+
+---
+
+```{r}
+# 1. load the data
+health <- read.csv("./data/health2.csv")
+# 2. subset the data to 2017
+health <- subset(health, grepl("2017", date))
+# 3. run regression
+res <- lm(weight ~ dayofyear + steps.lag + calorie.lag, data = health)
+# 4. plot residuals against each explanatory variable
+par(mfrow = c(1, 3))
+plot(x = health$dayofyear, y = residuals(res))
+plot(x = health$steps.lag, y = residuals(res))
+plot(x = health$calorie.lag, y = residuals(res))
+# 5. re-run regression with quadratic and interaction terms
+quad_res <- lm(weight ~ (dayofyear + I(dayofyear^2)) * calorie.lag + steps.lag, data = health)
+# 6. F-test
+anova(res, quad_res)
+# 7. create counterfactual scenarios
+hypo_dat <- expand.grid(
+  dayofyear = 1:365,
+  calorie.lag = quantile(health$calorie.lag, c(0.25, 0.5, 0.75)),
+  steps.lag = mean(health$steps.lag)
+)
+# 8. Use the unrestricted model and hypothetical scenario to predict weights
+hypo_dat$weight_pred <- predict(quad_res, hypo_dat)
+# 9. Plot predicted values under different dayofyear when calorie.lag equals to the first quartile, median, and the third quartile, respectively.
+plot(weight_pred ~ dayofyear, type = "l", col = "blue", data = subset(hypo_dat, calorie.lag == quantile(health$calorie.lag, 0.25)))
+lines(weight_pred ~ dayofyear, type = "l", col = "green", data = subset(hypo_dat, calorie.lag == quantile(health$calorie.lag, 0.5)))
+lines(weight_pred ~ dayofyear, type = "l", col = "red", data = subset(hypo_dat, calorie.lag == quantile(health$calorie.lag, 0.75)))
+legend("bottomright", title = "Active Calorie", c("1st Quartile", "Median", "3rd Quartile"), lty = 1, col = c("blue", "green", "red"))
+
+```
+
+---
+
+# Which Term to Add?
+
+## Diagnostics Based on Prediction and Precision
+
+- Scatter plot between residuals $\hat{\varepsilon}$ and explanatory variable $X$
+  - check whether there is an unexplained pattern in the data.
+- $R^2$ and F test (Not required currently)
+  - If adding an addtional term can increase the predictive power, the sum of squared residuals in the new (unrestricted) model should be smaller than that of the old (restricted) model.
+
+$$
+\text{F-statistic} = \frac{\text{(scaled) reduction in prediction error}}{\text{(scaled) remaining prediction error}} = \frac{(\text{RSS}_\text{restricted} - \text{RSS}_\text{unrestricted}) / q}{\text{RSS}_\text{unrestricted} / (n - k - 1)} \sim F_{q, n - k - 1}
+$$
+
+---
+
+## Add Terms Based on Causality
+
+### Good Control: Confounders
+
+$$
+D \leftarrow X \rightarrow Y
+$$
+
+A confounder is the common cause for both $D$ and $Y$, e.g. whether a student is a senior can both affect whether she uses ChatGPT and the test score.
+
+```{r}
+
+set.seed(98105)
+X <- rnorm(1e3)
+D <- 2 * X + rnorm(1e3)
+Y <- 5 * D + 10 * X + rnorm(1e3)
+
+lm(Y ~ D) |> summary() # biased estimate of direct effect
+lm(Y ~ D + X) |> summary() # including the confounder X will correct the estimate
+
+```
+
+---
+
+### Bad Control: Post-treatment variables
+
+$$
+D \rightarrow X \rightarrow Y
+$$
+
+A post-treatment variable is a mediator between $D$ and $Y$, e.g. a student's study time can be affected by whether the student uses ChatGPT, and her study time will then influence the test score.
+
+```{r}
+
+set.seed(98105)
+D <- rnorm(1e3)
+X <- 5 * D + rnorm(1e3)
+Y <- 10 * X + rnorm(1e3)
+
+lm(Y ~ D) |> summary()  # this will give us roughly correct estimate
+lm(Y ~ D + X) |> summary()  # including the post-treatment variable X will mask the relationship between D and Y
+
+```
+
+---
+
+### Bad Control: Colliders
+
+$$Y \rightarrow X \leftarrow D$$
+
+A collider is the common consequence of both $D$ and $Y$, e.g. a student's evaluation on TA is influenced by both whether the student uses ChatGPT and whether the student gets good test scores.
+
+
+```{r}
+#| echo: true
+
+set.seed(98105)
+D <- rnorm(1e3)
+X <- 5 * D + Y + rnorm(1e3)
+
+lm(Y ~ D) |> summary()  # D and Y have no correlation
+lm(Y ~ D + X) |> summary()  # including the collider X will create information flows between D and Y
+```
+
+---
+
+### Shutting the Backdoor
+
+- Include all pre-treatment variables in regression models.
+- Control confounders as many as possible.
+- Don't include colliders. 
+
+---
+
+# Midterm
+
+
+
+
