@@ -1,0 +1,160 @@
+---
+title: "Power Analysis"
+format: 
+  html: 
+    self-contained: true
+    page-layout: full
+execute: 
+  echo: false
+---
+
+
+```{ojs, echo=FALSE}
+
+math = require('mathjs')
+jStat = require('jstat')
+
+viewof null_mu = Inputs.range([-3, 3], {label: tex`\mu`, step: 0.01, value: 0})
+viewof null_sigma = Inputs.range([0.1, 50], {label: tex`\sigma`, step: 0.01, value: 20})
+viewof sample_size = Inputs.range([1, 1000], {label: tex`n`, step: 1, value: 500})
+viewof rej_level = Inputs.range([0.001, 0.1], {label: tex`\alpha \text{ threshold}`, step: 0.001, value: 0.05});
+viewof obs_mean = Inputs.range([-5, 5], {label: tex`\bar{X}^\text{obs}`, step: 0.01, value: 2});
+viewof true_mu = Inputs.range([-5, 5], {label: tex`\mu^*`, step: 0.01, value: 0.5});
+
+tex.block`\text{What is the probability of correctly rejecting the null when the true value is } ${true_mu}?`
+
+tex.block`H_0: \mu = ${null_mu} \Rightarrow \bar{X} | H_0 \sim \mathcal{N}(${null_mu}, \frac{${null_sigma}^2}{${sample_size}})`
+
+function normal_pdf(x, mu, sigma) {
+  return (1 / Math.sqrt(2 * Math.PI * sigma ** 2)) *
+    Math.exp(-((x - mu) ** 2) / (2 * sigma ** 2));
+}
+function normal_cdf(x, mu, sigma) {
+  let standardize = (x - mu) / sigma;
+  return 0.5 * (1 + math.erf(standardize / Math.sqrt(2)));
+}
+
+x_grid = d3.range(-5, 5, 0.01)
+null_curve = x_grid.map(x => {
+  return {x: x, y: normal_pdf(x, null_mu, null_sigma / Math.sqrt(sample_size))}
+})
+true_curve = x_grid.map(x => {
+  return {x: x, y: normal_pdf(x, true_mu, null_sigma / Math.sqrt(sample_size))}
+})
+rej_lwr = null_mu - jStat.normal.inv(1 - rej_level / 2, 0, 1) * null_sigma / Math.sqrt(sample_size)
+rej_upr = null_mu + jStat.normal.inv(1 - rej_level / 2, 0, 1) * null_sigma / Math.sqrt(sample_size)
+
+pval = normal_cdf(null_mu - Math.abs(obs_mean - null_mu), null_mu, null_sigma / Math.sqrt(sample_size)) + (1 - normal_cdf(null_mu + Math.abs(obs_mean - null_mu), null_mu, null_sigma / Math.sqrt(sample_size)))
+
+true_power = normal_cdf(rej_lwr, true_mu, null_sigma / Math.sqrt(sample_size)) + (1 - normal_cdf(rej_upr, true_mu, null_sigma / Math.sqrt(sample_size)))
+power_seq = x_grid.map(x => {
+  return {x: x, y: normal_cdf(rej_lwr, x, null_sigma / Math.sqrt(sample_size)) + (1 - normal_cdf(rej_upr, x, null_sigma / Math.sqrt(sample_size)))}
+})
+
+tex.block`p\text{-value}(\bar{X}^\text{obs} = ${obs_mean}) = ${Math.round(pval * 10 ** 3) / 10 ** 3} ; \text{Power}(\mu^* = ${true_mu}) = ${Math.round(true_power * 10 ** 3) / 10 ** 3}`
+
+// Create data for p-value region
+pval_region_left = x_grid.filter(x => x < null_mu - Math.abs(obs_mean - null_mu)).map(x => {
+  return {x: x, y: normal_pdf(x, null_mu, null_sigma / Math.sqrt(sample_size))};
+});
+pval_region_right = x_grid.filter(x => x > null_mu + Math.abs(obs_mean - null_mu)).map(x => {
+  return {x: x, y: normal_pdf(x, null_mu, null_sigma / Math.sqrt(sample_size))};
+});
+rej_region_left = x_grid.filter(x => x < rej_lwr).map(x => {
+  return {x: x, y: normal_pdf(x, null_mu, null_sigma / Math.sqrt(sample_size))};
+});
+rej_region_right = x_grid.filter(x => x > rej_upr).map(x => {
+  return {x: x, y: normal_pdf(x, null_mu, null_sigma / Math.sqrt(sample_size))};
+});
+power_region_left = x_grid.filter(x => x < rej_lwr).map(x => {
+  return {x: x, y: normal_pdf(x, true_mu, null_sigma / Math.sqrt(sample_size))};
+});
+power_region_right = x_grid.filter(x => x > rej_upr).map(x => {
+  return {x: x, y: normal_pdf(x, true_mu, null_sigma / Math.sqrt(sample_size))};
+});
+
+normal_max = Math.max(...null_curve.map(d => d.y));
+
+```
+
+
+
+:::{.columns}
+
+:::{.column width=45%}
+
+```{ojs}
+
+Plot.plot({
+  y: {
+    label: "Density"
+  },
+  marks: [
+    Plot.areaY(pval_region_left, {x: "x", y: "y", fill: "yellow", fillOpacity: 0.2}),
+    Plot.areaY(pval_region_right, {x: "x", y: "y", fill: "yellow", fillOpacity: 0.2}),
+    Plot.areaY(rej_region_left, {x: "x", y: "y", fill: "red", fillOpacity: 0.2}),
+    Plot.areaY(rej_region_right, {x: "x", y: "y", fill: "red", fillOpacity: 0.2}),
+    Plot.areaY(power_region_left, {x: "x", y: "y", fill: "blue", fillOpacity: 0.2}),
+    Plot.areaY(power_region_right, {x: "x", y: "y", fill: "blue", fillOpacity: 0.2}),
+    Plot.line(null_curve, {x: "x", y: "y"}),
+    Plot.line(true_curve, {x: "x", y: "y", stroke: "blue"}),
+    Plot.ruleX([null_mu], {strokeDasharray: [5, 5]}),
+    Plot.ruleX([true_mu], {stroke: "blue", strokeDasharray: [5, 5]}),
+    Plot.ruleX([obs_mean]),
+    Plot.text([[obs_mean, normal_max]], {text: ["Observed Sample Mean"], textAnchor: "middle"})
+  ],
+})
+
+```
+
+:::
+
+
+:::{.column width=45%}
+
+```{ojs}
+
+Plot.plot({
+  x: {
+    label: "True Value"
+  },
+  y: {
+    label: "Power",
+    domain: [0, 1]
+  },
+  marks: [
+    Plot.line(power_seq, {x: "x", y: "y"}),
+    Plot.dot([{x: true_mu, y: true_power, r: 5}]),
+    Plot.ruleX([true_mu], {y2: true_power, strokeDasharray: [5, 5]}),
+    Plot.ruleY([true_power], {x1: -5, x2: true_mu, strokeDasharray: [5, 5]}),
+  ],
+})
+
+```
+
+:::
+
+:::
+
+
+
+```{ojs}
+
+html`
+
+<div style="display: inline-block;">
+    <span style="display: inline-block; width: 10px; height: 10px; margin-right: 5px; background-color: yellow;"></span>
+    <label>P-value region</label>
+    <span style="display: inline-block; width: 10px; height: 10px; margin-left: 15px; margin-right: 5px; background-color: red;"></span>
+    <label>Rejection region</label>
+    <span style="display: inline-block; width: 10px; height: 10px; margin-left: 15px; margin-right: 5px; background-color: blue;"></span>
+    <label>Power region</label>
+    <span style="display: inline-block; width: 10px; height: 10px; margin-left: 15px; margin-right: 5px; border: 1px solid black;"></span>
+    <label>H0 curve</label>
+    <span style="display: inline-block; width: 10px; height: 10px; margin-left: 15px; margin-right: 5px; border: 1px solid blue;"></span>
+    <label>True curve</label>
+</div>
+
+`
+
+```

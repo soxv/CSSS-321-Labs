@@ -1,0 +1,285 @@
+---
+title: "CSSS/SOC/STAT 321: Lab 8"
+subtitle: "Uncertainty and Confidence Interval"
+author: "Tao Lin"
+office_hours: "Office Hours: Fri 1:30 - 3:30 PM Smith 35"
+slides_url: "Section Slides URL: [soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs)"
+format: 
+  revealjs:
+    template-partials:
+      - title-slide.html
+    smaller: true
+    scrollable: true
+    self-contained: true
+    slide-number: true
+    reference-location: "document"
+    link-external-icon: true
+    link-external-newwindow: true
+    footnotes-hover: true
+    html-math-method: katex
+    footer: "CSSS/SOC/STAT 321 Data Science and Statistics for Social Scicence I"
+    logo: "https://csss.uw.edu/assets/csss-logo.png"
+execute: 
+  echo: true
+  #eval: false
+  warning: false
+  message: false
+filters:
+  - reveal-auto-agenda
+auto-agenda:
+  bullets: bullets
+  heading: Agenda
+---
+
+## Goals for Week 8
+
+- QSS Tutorial 9
+- Key Question in Week 8
+  - Where does the uncertainty of an estimate come from?
+  - How can we derive the confidence interval of an estimate?
+  - How can we derive the number of observations according to the desired precision/margin of error? (Power Analysis)
+- Problem Set 3
+
+---
+
+# Uncertainty in Statistical Inference
+
+---
+
+## Relationship between Population and Sample
+
+![](./img/statistical_inference.drawio.svg)
+
+- Random Sampling: 
+  - we take a random sample of size $n$ from population $N$ with replacement. Then observations in the sample will be independent and identically distributed (i.i.d.) draws from population distribution.
+- Parallel Worlds/Groundhog Day: 
+  - when units are not samples but available observed data, such as countries and subnational units, we can have a thought experiment that if we re-run the history multiple times, data and outcomes will change slightly due to stochastic nature of the world.
+  - each unit is generated from the same data generating process (DGP) or the same "superpopulation" distribution.
+
+---
+
+## Statistical Inference
+
+The goal of statistical inference is to use sample to infer or recover some nature of population.
+
+- Point Estimation: provide a single best guess as to the value of some fixed unknown quantity of interest $\theta$
+  - **Estimand** (quantitle of interest/target of estimation): parameter in a population to be estimated in a statistical analysis.
+    - Population parameter $\theta$ is a feature of the population distribution $f(y)$.
+    - e.g. $\mathbb{E}(Y)$, $\mathbb{V}(Y)$, $\mathbb{E}[Y_i(1) - Y_i(0)]$.
+  - **Estimator** (method of estimation): a rule, formula, or algorithm for calculating an estimate of a given quantity based on observed data under some reasonable assumptions.
+    - An estimator $\hat{\theta}$ is a function of the sample: $\hat{\theta} = h(Y_1, Y_2, \cdots, Y_n)$
+    - e.g. arithmetic mean $\bar{Y} = \frac{1}{n} \sum_{i=1}^n Y_i$, difference in means between treated and control groups $\frac{1}{n_1}\sum_{i=1}^{n_1}Y_i - \frac{1}{n_0}\sum_{i=1}^{n_0}Y_i$
+    - An estimator $\hat{\theta}$ is also a random variable! Its uncertainty comes from DGP and repeated sampling. We call the distribution of estimator "sampling distribution."
+      - e.g. a sample mean is one draw from its sampling distribution.
+  - **Estimate** (numerical result of estimation): a particular numeric realization of an estimator.
+
+---
+
+## Criteria to Evaluate Estimators
+
+- Unbiasedness: the expectation of an estimator should equal to the true population parameter
+
+$$
+\mathbb{E}(\hat{\theta}) - \theta = 0
+$$
+
+- Consistency: the distribution of $\hat{\theta}$ collapses on the true population parameter $\theta$ as $n \rightarrow \infty$
+  - that is, the sampling variance $\mathbb{E}(\hat{\theta}) \rightarrow 0$ as $n \rightarrow \infty$.
+  - inconsistent estimators are bad. It means that more data may give worse answers.
+
+- Asymptotic Normality: the distribution of standardized estimator will converge to a standard normal distribution as $n$ goes large.
+
+$$
+\frac{\hat{\theta} - \theta}{\text{se}(\hat{\theta})} \rightarrow \text{N}(0, 1)
+$$
+
+---
+
+Why does arithmetic sample mean is a good estimator for true population expectation?
+
+- Unbiasedness:
+
+$$
+\mathbb{E}(\bar{X}) = \mathbb{E}\left(\frac{1}{n}\sum_{i=1}^n X_i\right) = \frac{1}{n} \sum_{i}^n \mathbb{E}(X_i) = \frac{1}{n} \cdot n \cdot \mu = \mu
+$$
+
+- Consistency:
+
+$$
+\mathbb{V}(\bar{X}) = \mathbb{V}\left(\frac{1}{n}\sum_{i=1}^n X_i\right) = \frac{1}{n^2} \sum_{i=1}^n \mathbb{V}(X_i) = \frac{1}{n^2} \cdot n \cdot \sigma^2 = \frac{\sigma^2}{n}
+$$
+
+- Asymptotic Normality:
+
+$$
+\frac{\bar{X} - \mu}{\sigma} \rightarrow \text{N}(0, 1)
+$$
+
+---
+
+# Uncertainty of Estimator
+
+---
+
+## Normal Distribution
+
+Because the distribution of sample means is asymptotically normal, we can utilize the features of normal distribution to capture uncertainty from repeated sampling.
+
+```{r}
+#| echo: false
+
+library(tidyverse)
+
+x_grid <- seq(-3, 3, by = 0.01)
+par(mfrow = c(1, 3))
+plot(x = x_grid, y = dnorm(x_grid) / sum(dnorm(x_grid)), type = "l", xlab = "x", ylab = "Probability")
+plot(x = x_grid, y = pnorm(x_grid), type = "l", xlab = "x", ylab = "Cumulative Probability")
+plot(x = seq(0.001, 0.999, 0.001), y = qnorm(seq(0.001, 0.999, 0.001)), type = "l", xlab = "Cumulative Probability", ylab = "x")
+```
+
+- In the probability density curve plot, the x-axis denotes the value of the random variable $X_i$, and the y-axis denotes the probability of $X_i = x$. The area under the curve should sum to 1.
+  - We can use the value of random variable to find its probability, e.g. $P(X_i = 1)$, $P(-2 \leq X_i \leq 0)$ (`dnorm()` in `R`).
+- In the cumulative density curve plot, the x-axis denotes the value of the random variable $X_i$, and the y-axis denotes the cumulative probability of $X_i \geq x$ (`pnorm()` in `R`).
+  - We can use cumulative probability of $X_i \geq x$ to find the value of $x$ using the inverse function of cumulative density curve (`qnorm()` in `R`).
+
+---
+
+## Confidence Interval
+
+![](./img/std_normal.png)
+
+We actually use the inverse function of cumulative density to compute the bound of confidence interval.
+
+$$
+\text{CI} = \bar{X} \pm \underbrace{z_{\alpha/2} \cdot \text{se}(\bar{X})}_\text{margin of error} = \mu_x \pm z_{\alpha/2} \cdot \sqrt{\frac{\sigma_x}{n}}
+$$
+
+Interpretation (very important!): 95% confidence interval means that there are 95% of chance that the confidence interval will contain the true population mean under repeated sampling.
+
+The range of confidence interval will goes large if we have a small-sized sample, which means we have lots of uncertainty due to the lack of information.
+
+---
+
+## Power Analysis
+
+Sometimes we want to know how many samples we need to collect so that we can have an estimate with a desired level of uncertainty/margin of error. We can simply solve the previous equation.
+
+---
+
+In-class Exercise
+
+- Download and load `pres2016.csv`.
+- What is the average approval for Trump?
+- What is the standard deviation of the average approval for Trump? (Note that the DGP of approval follows a Bernoulli distribution)
+- What is the upper bound of 95% confidence interval? What is the lower bound?
+
+---
+
+```{r}
+
+dat <- read.csv("./data/election2016.csv")
+
+mean(dat$Trump)
+
+sqrt(sd(dat$Trump) / 51)
+
+mean(dat$Trump) + qnorm(0.975) * sqrt(sd(dat$Trump) / 51)
+
+mean(dat$Trump) - qnorm(0.975) * sqrt(sd(dat$Trump) / 51)
+
+```
+
+Correction:
+
+- If we only know a single number of estimated proportion, then we have to assume a Bernoulli distribution and use $p \cdot (1 - p)$ to compute standard deviation.
+- However, if we already know a sequence of proportions, we can directly use `sd()` in `R` to compute standard deviation.
+
+---
+
+# Problem Set 3
+
+---
+
+- Type: observational study
+- Outcome Variable: black voter turnout (`turnout`)
+- Explanatory Variable: the presence of black candidates (binary, `candidate`)
+- Confounders?
+  - black voting age population (`CVAP`)
+  - year
+  - state
+
+---
+
+## Question 1
+
+Fraga analyzes turnout data for four different racial and ethnic groups, but for this analysis we will focus on the data for black voters. Load `blackturnout.csv`. Which years are included in the dataset? How many different states are included in the dataset?
+
+Hint: `unique()`
+
+---
+
+## Question 2
+
+Create a boxplot that compares turnout in elections with and without a co-ethnic candidate. Be sure to use informative labels. Interpret the resulting graph.
+
+Hint: `boxplot(y ~ x, names = c(...))`
+
+---
+
+## Question 3
+
+Run a linear regression with black turnout as your outcome variable and candidate co-ethnicity as your predictor. Report the coefficient on your predictor and the intercept. Interpret these coefficients. Do not merely comment on the direction of the association (i.e., whether the slope is positive or negative). Explain what the value of the coefficients mean in terms of the units in which each variable is measured. Based on these coefficients, what would you conclude about blacks voter turnout and co-ethnic candidates?
+
+---
+
+## Question 4
+
+You decide to investigate the results of the previous question a bit more carefully because the elections with co-ethnic candidates may differ from the elections without co-ethnic candidates in other ways. Create a scatter plot where the x-axis is the proportion of co-ethnic voting-age population and the y-axis is black voter turnout. Color your points according to candidate co-ethnicity. That is, make the points for elections featuring co-ethnic candidates one color, and make the points for elections featuring no co-ethnic candidates a different color. Interpret the graph.
+
+Hint: `plot(y = ..., x = ..., col = ifelse(...))` and `legend()`.
+
+---
+
+## Question 5
+
+Run a linear regression with black turnout as your outcome variable and with candidate co-ethnicity and co-ethnic voting-age population as your predictors. Report the coefficients, including the intercept. Interpret the coefficients on the two predictors, ignoring the intercept for now (you will interpret the intercept in the next question). Explain what each coefficient represents in terms of the units of the relevant variables.
+
+---
+
+## Question 6
+
+Now interpret the intercept from the regression model with two predictors. Is this intercept a substantively important or interesting quantity? Why or why not?
+
+---
+
+## Question 7
+
+Based on the regression model with one predictor, what do you conclude about the relationship between co-ethnic candidates and black voter turnout? Based on the regression model with two predictors, what do you conclude about the relationship between co-ethnic candidates and black voter turnout? Please ignore issues of statistical significance for this question.
+
+---
+
+## Question 8
+
+Repeat the analysis in the Question 5, but fit the linear regression by year. Which year has a positive coefficient of candidate co-ethnicity? Use `for loop` to check each year. In the loop, use `if()` to check the
+coefficient and print out the year if the coefficient of candidate co-ethnicity (candidate) is positive.
+
+Hint:
+
+```{r}
+#| eval: false
+
+for (i in ...) {
+  
+  subset to certain year
+  
+  run regression
+  
+  if (coefficient of candidate > 0) {
+    
+    print(...)
+    
+  }
+}
+
+```
+

@@ -16,7 +16,7 @@ format:
     link-external-icon: true
     link-external-newwindow: true
     footnotes-hover: true
-    html-math-method: katex
+    #html-math-method: katex
     footer: "CSSS/SOC/STAT 321 Data Science and Statistics for Social Scicence I"
     logo: "https://csss.uw.edu/assets/csss-logo.png"
 execute: 
@@ -289,7 +289,63 @@ hypo_dat
 
 ---
 
+## DID Design in Regression Model
+
+
+|   |Pre ($T_i=0$)|Post ($T_i=1$)|
+|---|---|---|
+|Treated ($G_i=1$)| $\bar{Y}_\text{treat}^\text{pre}$  | $\bar{Y}_\text{treat}^\text{post}$  |
+|Control ($G_i=0$)|  $\bar{Y}_\text{control}^\text{pre}$ | $\bar{Y}_\text{control}^\text{post}$  |
+
+
+$$
+( \bar{Y}_\text{treat}^\text{post} - \bar{Y}_\text{treat}^\text{pre} ) - ( \bar{Y}_\text{control}^\text{post} - \bar{Y}_\text{control}^\text{pre} )
+$$
+
+
+$$
+Y_i = \beta_0 + \beta_1 G_i + \beta_2 T_i + \beta_3 G_i \times T_i
+$$
+
+- $\beta_0$: the average value of $Y$ when $G = 0$ and $T = 0$
+
+$$\bar{Y}_\text{control}^\text{pre}$$
+
+- $\beta_1$: the difference in means of $Y$ between $G = 1$ and $G = 0$ when $T = 0$
+
+$$\bar{Y}_\text{treat}^\text{pre} - \bar{Y}_\text{control}^\text{pre}$$
+
+- $\beta_2$: the difference in means of $Y$ between $T = 1$ and $T = 0$ when $G = 0$
+
+$$\bar{Y}_\text{control}^\text{post} - \bar{Y}_\text{control}^\text{pre}$$
+
+- $\beta_3$: it quantifies how the change between post and pre differs between treated and control groups.
+
+$$
+\begin{aligned}
+& ( \bar{Y}_\text{treat}^\text{post} - \bar{Y}_\text{treat}^\text{pre} ) - ( \bar{Y}_\text{control}^\text{post} - \bar{Y}_\text{control}^\text{pre} ) \\
+=& [\underbrace{(\beta_0 + \beta_1 + \beta_2 + \beta_3)}_{\bar{Y}_\text{treat}^\text{post}} - \underbrace{(\beta_0 + \beta_1)}_{\bar{Y}_\text{treat}^\text{pre}}] \\
+& - [\underbrace{(\beta_0 + \beta_2)}_{\bar{Y}_\text{control}^\text{post}} - \underbrace{\beta_0}_{\bar{Y}_\text{control}^\text{pre}}] \\
+=& \beta_3
+\end{aligned}
+$$
+
+
+---
+
 # Non-linear Terms
+
+---
+
+## (Natural-)Log Transformation
+
+```{ojs}
+
+viewof log_x = Inputs.range([-3, 3], {label: tex`\log(x)`, step: 0.01, value: 0})
+
+tex.block`\log(x) = ${log_x} \Rightarrow x = \exp(\log(x)) = ${Math.round(Math.exp(log_x) * 10 ** 3) / 10 ** 3} = 1 + ${Math.round((Math.exp(log_x) - 1) * 10 ** 3) / 10 ** 3}`
+
+```
 
 ---
 

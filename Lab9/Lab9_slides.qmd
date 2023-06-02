@@ -1,0 +1,235 @@
+---
+title: "CSSS/SOC/STAT 321: Lab 9"
+subtitle: "Hypothesis Testing"
+author: "Tao Lin"
+office_hours: "Office Hours: Fri 1:30 - 3:30 PM Smith 35"
+slides_url: "Section Slides URL: [soxv/CSSS-321-Labs](https://github.com/soxv/CSSS-321-Labs)"
+format: 
+  revealjs:
+    template-partials:
+      - title-slide.html
+    smaller: true
+    scrollable: true
+    self-contained: true
+    slide-number: true
+    reference-location: "document"
+    link-external-icon: true
+    link-external-newwindow: true
+    footnotes-hover: true
+    html-math-method: katex
+    footer: "CSSS/SOC/STAT 321 Data Science and Statistics for Social Scicence I"
+    logo: "https://csss.uw.edu/assets/csss-logo.png"
+execute: 
+  echo: true
+  #eval: false
+  warning: false
+  message: false
+filters:
+  - reveal-auto-agenda
+auto-agenda:
+  bullets: bullets
+  heading: Agenda
+---
+
+## Goals for Week 9
+
+- QSS Tutorial 10
+- Key Question in Week 9
+  - What is Type I Error and Type II Error?
+  - What is p-value?
+  - What is power analysis?
+  - How can we conduct hypothesis testing?
+- Initial Data Analysis (Free Time)
+- In-class Exercise
+  - $t$-test
+  - power analysis
+
+
+---
+
+# Hypothesis Testing
+
+---
+
+## General Procedure
+
+- Determine a null hypothesis $H_0$ and an alternative hypothesis $H_1$
+  - For two-sided test, we often have $H_0: \mu = c$ and $H_1: \mu \neq c$.
+  - For one-sided test,
+    - we often have $H_0: \mu < c$ and $H_1: \mu \geq c$.
+    - or $H_0: \mu > c$ and $H_1: \mu \leq c$.
+- Compute the observed test statistic from data under the null hypothesis. e.g. For any normally distributed estimator $\hat{theta}$, we have
+
+$$
+T = \frac{\hat{\theta} - \theta_0}{\hat{\text{se}}(\hat{\theta})}
+$$
+
+- Given the distribution of test statistics under the null hypothesis, we compute the $p$-value. For a two-sided test, we have
+
+$$
+p\text{-value} = \text{Pr}(|T| > z_{\alpha/2})
+$$
+
+```{r}
+pnorm(2, mean = 0, sd = 1)
+```
+
+---
+
+## Type I and Type II Error
+
+|   | Reject $H_0$ | Retain $H_0$ |
+|:---:|:---:|:---:|
+| $H_0$ is True | False Positive/Type I Error ($\alpha$) | True Negative |
+| $H_0$ is False | True Positive | False Negative/Type II Error ($\beta$) |
+
+
+- False Positive/Type I Error:
+  - we incorrectly reject the null hypothesis when the null is actually true.
+  - p-value: the probability of false positive ($\alpha$). We usually use 0.05 as a threshold to reject the null.
+- False Negative/Type II Error:
+  - we incorrectly retain the null hypothesis when the null is actually false.
+  - OR: we incorrectly reject the alternative hypothesis when the alternative hypothesis is true.
+  - Statistical power of a study: the probability of true positive ($1 - \beta$).
+
+---
+
+## $p$-value
+
+- Interpretation of $p$-value: True or False
+  - Does a smaller $p$-value mean a larger effect of X on Y?
+  - Is $p$-value the probability that the null hypothesis is true?
+  - Is $p$-value the probability that the alternative hypothesis is false?
+  - Is $p$-value the probability that the randomly distributed number is at least as extreme as the observed number?
+
+---
+
+### Multiple testing problem
+
+A malicious researcher in a big platform company first test for an overall effect. Had the null been rejected, the researcher would report the finding. If the researcher fails to reject, then he run a test for a subgroup and report that result.
+
+Assuming the two tests are independent, we have
+
+$$
+\begin{aligned}
+\text{Pr}(\text{at least 1 reject}) =& 1 - \text{Pr}(\text{no reject}) \\
+=& 1 - (1 - \alpha)^2 \\
+=& 1 - 0.95 \times 0.95 \\
+=& 0.0975 > 0.05
+\end{aligned}
+$$
+
+The Type 1 error goes up because of "hidden" multiple testing. The researcher can’t commit to the same data analysis plan under di↵erent realizations of the sample.
+
+---
+
+![](./img/p_hacking.png)
+
+
+---
+
+## Power Analysis
+
+
+- Key question: what is the probability of rejecting the null if the true value is equal to ...? (i.e. probability of true positive)
+- Potential causes of low statistical power
+  - data variability
+  - small sample size
+- The goal of power analysis
+  - After data collection: we want to exclude the possibility that it is lower power that causes our statistically (in-)significant result.
+  - Before data collection: determine the sample size that reaches the minimum level of statistical power.
+- General procedure
+  - Determine the threshold to reject the null.
+  - Compute the upper and lower bound of rejection regions for the null hypothesis.
+  - Compute the probability of a test statistic greater than the upper bound or smaller than the lower bound, under the alternative true value.
+
+---
+
+<iframe src="./img/power_analysis.html" width="100%" height="100%"></iframe>
+
+---
+
+## In-class Exercise
+
+- Download and load `broockman_kalla_2016_w9.csv`.
+- Use `t.test()` to perform two-sample two-sided t-test for wave 0 (placebo test), wave 1, wave 2, wave3, and wave 4.
+- What is the power of difference in means in wave 0? Please use `power.t.test()` and set the number of observation per group to 900 (`n = 900`), set the standard deviation to 30 (`sd = 30`). How can we interpret the result?
+- Use `geom_pointrange()` in `ggplot2` to plot the point estimate and confidence interval for each wave.
+- Use the following formula to perform multivariate regression analysis for all waves except wave 0:
+
+`therm_trans_t* ~ treat_ind + therm_trans_t0 + vf_age + vf_racename + vf_female + vf_democrat`
+
+- Compute the confidence interval of the coefficient of `treat_ind`. To extract point estimate of coefficent, we need to use `coef()`, and to extract the standard error of coefficient, we need to use the following code:
+
+`sqrt(diag(vcov(model)))["treat_ind"]`
+
+- Plot the confidence interval for the coefficient of `treat_ind` in regression models. What do you find?
+
+---
+
+```{r}
+
+library(tidyverse)
+
+dat <- read.csv("./data/broockman_kalla_2016_w9.csv")
+
+t0 <- t.test(dat$therm_trans_t0[dat$treat_ind==1], dat$therm_trans_t0[dat$treat_ind==0])
+t1 <- t.test(dat$therm_trans_t1[dat$treat_ind==1], dat$therm_trans_t1[dat$treat_ind==0])
+t2 <- t.test(dat$therm_trans_t2[dat$treat_ind==1], dat$therm_trans_t2[dat$treat_ind==0])
+t3 <- t.test(dat$therm_trans_t3[dat$treat_ind==1], dat$therm_trans_t3[dat$treat_ind==0])
+t4 <- t.test(dat$therm_trans_t4[dat$treat_ind==1], dat$therm_trans_t4[dat$treat_ind==0])
+
+power.t.test(n = 900, delta = t0$estimate[2] - t0$estimate[1], sd = 30)
+power.t.test(n = 900, delta = t1$estimate[2] - t1$estimate[1], sd = 30)
+
+t_ci_dat <- data.frame(
+  wave = c(0, 1, 2, 3, 4),
+  est = c(
+    t0$estimate[1] - t0$estimate[2],
+    t1$estimate[1] - t1$estimate[2],
+    t2$estimate[1] - t2$estimate[2],
+    t3$estimate[1] - t3$estimate[2],
+    t4$estimate[1] - t4$estimate[2]
+  ),
+  lwr = c(t0$conf.int[1], t1$conf.int[1], t2$conf.int[1], t3$conf.int[1], t4$conf.int[1]),
+  upr = c(t0$conf.int[2], t1$conf.int[2], t2$conf.int[2], t3$conf.int[2], t4$conf.int[2])
+)
+
+reg_t1 <- lm(therm_trans_t1 ~ treat_ind + therm_trans_t0 + vf_age + vf_racename + vf_female + vf_democrat, data = dat)
+reg_t2 <- lm(therm_trans_t2 ~ treat_ind + therm_trans_t0 + vf_age + vf_racename + vf_female + vf_democrat, data = dat)
+reg_t3 <- lm(therm_trans_t3 ~ treat_ind + therm_trans_t0 + vf_age + vf_racename + vf_female + vf_democrat, data = dat)
+reg_t4 <- lm(therm_trans_t4 ~ treat_ind + therm_trans_t0 + vf_age + vf_racename + vf_female + vf_democrat, data = dat)
+
+reg_ci_dat <- data.frame(
+  wave = c(0, 1, 2, 3, 4),
+  est = c(
+    0,
+    coef(reg_t1)["treat_ind"],
+    coef(reg_t2)["treat_ind"],
+    coef(reg_t3)["treat_ind"],
+    coef(reg_t4)["treat_ind"]
+  ),
+  lwr = c(
+    0,
+    coef(reg_t1)["treat_ind"] - qnorm(0.975) * sqrt(diag(vcov(reg_t1)))["treat_ind"],
+    coef(reg_t2)["treat_ind"] - qnorm(0.975) * sqrt(diag(vcov(reg_t2)))["treat_ind"],
+    coef(reg_t3)["treat_ind"] - qnorm(0.975) * sqrt(diag(vcov(reg_t3)))["treat_ind"],
+    coef(reg_t4)["treat_ind"] - qnorm(0.975) * sqrt(diag(vcov(reg_t4)))["treat_ind"]
+  ),
+  upr = c(
+    0,
+    coef(reg_t1)["treat_ind"] + qnorm(0.975) * sqrt(diag(vcov(reg_t1)))["treat_ind"],
+    coef(reg_t2)["treat_ind"] + qnorm(0.975) * sqrt(diag(vcov(reg_t2)))["treat_ind"],
+    coef(reg_t3)["treat_ind"] + qnorm(0.975) * sqrt(diag(vcov(reg_t3)))["treat_ind"],
+    coef(reg_t4)["treat_ind"] + qnorm(0.975) * sqrt(diag(vcov(reg_t4)))["treat_ind"]
+  )
+)
+
+ci_dat <- bind_rows(t_ci_dat, reg_ci_dat, .id = "type") %>%
+  mutate(type = ifelse(type == 1, "t.test", "regression"))
+
+ggplot(aes(x = wave, y = est, ymin = lwr, ymax = upr, group = type), data = ci_dat) +
+  geom_pointrange(aes(color = type), position = position_dodge(width = 0.2))
+
+```
+
